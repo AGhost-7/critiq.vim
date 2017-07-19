@@ -1,0 +1,23 @@
+
+Before:
+  let s:base_url = 'localhost:5000'
+  let g:last_response = {}
+  fu! s:on_response(response)
+    let g:last_response = a:response
+  endfu
+  let s:default_option = { 'callback': function('s:on_response') }
+
+After:
+  unlet g:last_response
+
+Execute(Runs basic get request):
+  call critiq#request#send(s:base_url, s:default_option)
+  call critiq#request#await_response()
+  AssertEqual empty(g:last_response), 0
+  AssertEqual g:last_response['code'], 200
+
+Execute(Handles invalid requests):
+  call critiq#request#send('boom', s:default_option)
+  call critiq#request#await_response()
+  AssertEqual empty(g:last_response), 0
+  AssertEqual g:last_response['code'], 0
