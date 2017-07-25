@@ -28,6 +28,7 @@ fu! critiq#review(state)
 	startinsert
 	nnoremap <buffer> q :bd<cr>
 	nnoremap <buffer> s :call critiq#send_review(b:critiq_state)<cr>
+	nnoremap <buffer> b :call critiq#github#browse_pr(b:critiq_pull_request)<cr>
 endfu
 
 fu! s:hollow_tab(lines)
@@ -49,8 +50,16 @@ fu! s:on_open_pr_diff(response)
 	nnoremap <buffer> rr :call critiq#review('REQUEST_CHANGES')<cr>
 	nnoremap <buffer> rc :call critiq#review('COMMENT')<cr>
 	nnoremap <buffer> c :call critiq#comment()<cr>
+	nnoremap <buffer> m :call critiq#github#merge_pr(b:critiq_pull_request)<cr>
 	nnoremap <buffer> <leader>c :call critiq#checkout()<cr>
+	nnoremap <buffer> b :call critiq#github#browse_pr(b:critiq_pull_request)<cr>
 endfu
+
+fu! critiq#browse_from_pr_list()
+	let pr = b:critiq_pull_requests[line('.') - 1]
+	call critiq#github#browse_pr(pr)
+endfu
+
 
 fu! critiq#open_pr()
 	let pr = b:critiq_pull_requests[line('.') - 1]

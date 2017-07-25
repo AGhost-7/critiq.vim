@@ -1,5 +1,5 @@
 
-" Github client!
+" Github functions.
 
 let s:pass = $GH_PASS
 let s:user = $GH_USER
@@ -93,7 +93,7 @@ fu! critiq#github#list_open_prs(callback)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
 
-fu! critiq#github#on_diff(response)
+fu! s:on_diff(response)
 	let id = a:response['id']
 	let request = s:requests[id]
 	call remove(s:requests, id)
@@ -109,17 +109,13 @@ fu! critiq#github#diff(pr, callback)
 		\ ]
 	let opts = {
 		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('critiq#github#on_diff'),
+		\ 'callback': function('s:on_diff'),
 		\ 'headers': headers,
 		\ 'raw': 1,
 		\ }
 	let url = s:repo_url . '/pulls/' . a:pr['number']
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
-endfu
-
-fu! critiq#github#on_submit_review(response)
-	call s:check_gh_error(a:response)
 endfu
 
 fu! critiq#github#submit_review(pr, event, body)
@@ -132,15 +128,31 @@ fu! critiq#github#submit_review(pr, event, body)
 	let opts = {
 		\ 'method': 'POST',
 		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('critiq#github#on_submit_review'),
+		\ 'callback': function('s:check_gh_error'),
 		\ 'data': data,
 		\ }
 	let url = s:repo_url . '/pulls/' . a:pr['number'] . '/reviews'
 	call critiq#request#send(url, opts)
 endfu
 
+fu! critiq#github#merge_pr(pr)
+	let opts = {
+		\ 'method': 'PUT',
+		\ 'user': s:user . ':' . s:pass,
+		\ 'callback': function('s:check_gh_error'),
+		\ }
+	let url = s:repo_url . '/pulls/' . a:pr['number'] . '/merge'
+	call critiq#request#send(url, opts)
+endfu
+
 fu! critiq#github#reload_url()
 	let s:repo_url = critiq#github#repo_url()
+endfu
+
+fu! critiq#github#browse_pr(pr)
+	let repo = critiq#github#parse_url(systemlist('git remote -v'))
+	let url = 'https://github.com/' . repo . '/pull/' . a:pr['number']
+	call netrw#BrowseX(url, 0)
 endfu
 
 let s:repo_url = critiq#github#repo_url()
