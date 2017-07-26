@@ -20,11 +20,11 @@ fu! s:check_gh_error(response)
 	endif
 endfu
 
-fu! critiq#github#repo_url()
-	 return g:critiq_github_url . '/repos/' . critiq#github#parse_url(systemlist('git remote -v'))
+fu! s:repo_url()
+	 return g:critiq_github_url . '/repos/' . s:repo
 endfu
 
-fu! critiq#github#parse_url(lines)
+fu! s:parse_repo(lines)
 	let matches = matchlist(a:lines, 'origin\s\+\(git@\|https://\)github\.com[:/]\(.\+\)\(\.git\)\?\s\+(fetch)')
 	if empty(matches)
 		throw 'Could not parse git url from remote'
@@ -60,6 +60,7 @@ fu! s:on_list_open_prs(response)
 	call remove(s:requests, id)
 
 	call s:check_gh_error(a:response)
+	let a:response['body'] = a:response['body']['items']
 	call request['callback'](a:response)
 endfu
 
@@ -70,7 +71,12 @@ fu! critiq#github#list_open_prs(callback)
 		\ 'callback': function('s:on_list_open_prs'),
 		\ }
 
-	let id = critiq#request#send(s:repo_url . '/pulls?state=open&per_page=50', opts)
+	let page = 1
+	let base_url = g:critiq_github_url . '/search/issues'
+	let search_query = 'q=repo:' . s:repo . '+is:pr+state:open'
+	let url = base_url . '?per_page=50&page=' . page . '&' . search_query
+
+	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
 
@@ -94,7 +100,7 @@ fu! critiq#github#diff(pr, callback)
 		\ 'headers': headers,
 		\ 'raw': 1,
 		\ }
-	let url = s:repo_url . '/pulls/' . a:pr['number']
+	let url = s:repo_url() . '/pulls/' . a:pr['number']
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
@@ -112,7 +118,7 @@ fu! critiq#github#submit_review(pr, event, body)
 		\ 'callback': function('s:check_gh_error'),
 		\ 'data': data,
 		\ }
-	let url = s:repo_url . '/pulls/' . a:pr['number'] . '/reviews'
+	let url = s:repo_url() . '/pulls/' . a:pr['number'] . '/reviews'
 	call critiq#request#send(url, opts)
 endfu
 
@@ -122,12 +128,8 @@ fu! critiq#github#merge_pr(pr)
 		\ 'user': s:user . ':' . s:pass,
 		\ 'callback': function('s:check_gh_error'),
 		\ }
-	let url = s:repo_url . '/pulls/' . a:pr['number'] . '/merge'
+	let url = s:repo_url() . '/pulls/' . a:pr['number'] . '/merge'
 	call critiq#request#send(url, opts)
-endfu
-
-fu! critiq#github#reload_url()
-	let s:repo_url = critiq#github#repo_url()
 endfu
 
 fu! critiq#github#browse_pr(pr)
@@ -136,5 +138,5 @@ fu! critiq#github#browse_pr(pr)
 	call netrw#BrowseX(url, 0)
 endfu
 
-let s:repo_url = critiq#github#repo_url()
+let s:repo = s:parse_repo(systemlist('git remote -v'))
 

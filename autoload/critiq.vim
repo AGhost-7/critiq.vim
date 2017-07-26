@@ -65,15 +65,33 @@ fu! critiq#open_pr()
 	call critiq#github#diff(pr, function('s:on_open_pr_diff'))
 endfu
 
+fu! critiq#colorize_labels()
+endfu
+
 fu! critiq#on_pull_requests(response)
 	let b:critiq_pull_requests = a:response['body']
+
+	let labels = {}
 	let lines = []
 	for pr in a:response['body']
-		call add(lines, '#' . pr['number'] . ' (' . pr['user']['login'] . '): ' . pr['title'])
+		let line = '#' . pr['number'] . ' (' . pr['user']['login'] . '): ' . pr['title'] . ' '
+		let i = 0
+		for label in pr['labels']
+			let labels[label['id']] = label
+			let line .= '[' . label['name'] . ']'
+			let i += 1
+			if(i < len(pr['labels']))
+				let line .= ' '
+			endif
+		endfor
+		call add(lines, line)
 	endfor
 
+
 	call s:hollow_tab(lines)
+
 	let b:critiq_pull_requests = a:response['body']
+	let b:critiq_labels = values(labels)
 	setf critiq_pr_list
 endfu
 
