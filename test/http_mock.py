@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from os import path
 
 app = Flask('http_mock')
@@ -22,6 +22,8 @@ def hello():
 
 @app.route('/repos/AGhost-7/critiq.vim/pulls')
 def list_prs():
+    if(request.headers['Accept'] == 'application/vnd.github.v3.diff'):
+        return 'hello diff'
     return fixture('prs_open.json')
 
 

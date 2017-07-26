@@ -31,3 +31,9 @@ Execute(lists open prs):
 
   AssertEqual empty(g:last_response), 0
 
+Execute(fetches a diff):
+  let g:prs = g:last_response['body']
+  call critiq#github#diff(g:prs[0])
+  call critiq#request#await_response()
+
+  AssertEqual 'hello diff', g:last_response['body']

@@ -25,7 +25,7 @@ fu! critiq#github#repo_url()
 endfu
 
 fu! critiq#github#parse_url(lines)
-	let matches = matchlist(a:lines, 'origin\s\+\(git@\|https://\)github\.com:\(.\+\)\(\.git\)\?\s\+(fetch)')
+	let matches = matchlist(a:lines, 'origin\s\+\(git@\|https://\)github\.com[:/]\(.\+\)\(\.git\)\?\s\+(fetch)')
 	if empty(matches)
 		throw 'Could not parse git url from remote'
 	else
@@ -56,40 +56,21 @@ endfu
 
 fu! s:on_list_open_prs(response)
 	let id = a:response['id']
-	let req = s:requests[id]
+	let request = s:requests[id]
 	call remove(s:requests, id)
 
 	call s:check_gh_error(a:response)
-
-	let body = a:response['body']
-	if(empty(body))
-		call req['callback'](a:response)
-	else
-		let reviews = {
-			\ 'callback': req['callback'],
-			\ 'pending': {},
-			\ 'response': a:response,
-			\ }
-		for pr in body
-			let opts = {
-				\ 'callback': function('s:on_list_reviews'),
-				\ 'user': s:user . ':' . s:pass,
-				\ }
-			let id = critiq#request#send(s:repo_url . '/pulls/' . pr['number'] . '/reviews', opts)
-			let reviews['pending'][id] = pr['number']
-			let s:requests[id] = reviews
-		endfor
-	endif
+	call request['callback'](a:response)
 endfu
 
 " Includes loading the reviews in parallel...
 fu! critiq#github#list_open_prs(callback)
 	let opts = {
 		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('s:on_list_open_prs')
+		\ 'callback': function('s:on_list_open_prs'),
 		\ }
 
-	let id = critiq#request#send(s:repo_url . '/pulls?state=open', opts)
+	let id = critiq#request#send(s:repo_url . '/pulls?state=open&per_page=50', opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
 
