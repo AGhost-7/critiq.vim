@@ -133,8 +133,7 @@ fu! critiq#github#merge_pr(pr)
 endfu
 
 fu! critiq#github#browse_pr(pr)
-	let repo = critiq#github#parse_url(systemlist('git remote -v'))
-	let url = 'https://github.com/' . repo . '/pull/' . a:pr['number']
+	let url = 'https://github.com/' . s:repo . '/pull/' . a:pr['number']
 	call netrw#BrowseX(url, 0)
 endfu
 
