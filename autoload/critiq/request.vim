@@ -5,7 +5,7 @@
 let s:requests = {}
 
 fu! s:chunk_handler(id, data, event)
-	if(!has_key(s:requests, a:id))
+	if !has_key(s:requests, a:id)
 		throw "Could not find http handler"
 	endif
 	let chunks = s:requests[a:id][a:event]
@@ -15,7 +15,7 @@ fu! s:chunk_handler(id, data, event)
 endfu
 
 fu! s:exit_handler(id, data, event)
-	if(!has_key(s:requests, a:id))
+	if !has_key(s:requests, a:id)
 		throw "Could not find http handler"
 	endif
 	let response = s:requests[a:id]
@@ -23,11 +23,11 @@ fu! s:exit_handler(id, data, event)
 	let stdout = response['stdout']
 	let response['code'] = +stdout[len(stdout) - 1]
 	let raw = has_key(response['options'], 'raw') && response['options']['raw']
-	if(len(stdout) == 1)
+	if len(stdout) == 1
 		let response['body'] = raw ? '' : {}
 	else
 		let body = stdout[0: len(stdout) - 2]
-		if(raw)
+		if raw
 			let response['body'] = body
 		else
 			let response['body'] = json_decode(join(body, ''))
@@ -43,7 +43,7 @@ let s:handler_options = {
 	\ }
 
 fu! s:method_parameter(options)
-	if(!has_key(a:options, 'method'))
+	if !has_key(a:options, 'method')
 		return '-XGET'
 	else
 		return '-X' . toupper(a:options['method'])
@@ -60,19 +60,19 @@ fu! critiq#request#send(url, options)
 		\ s:method_parameter(a:options)
 		\ ]
 
-	if(has_key(a:options, 'headers'))
+	if has_key(a:options, 'headers')
 		for header in a:options['headers']
 			call add(cmd, '-H')
 			call add(cmd, header)
 		endfor
 	endif
 
-	if(has_key(a:options, 'data'))
+	if has_key(a:options, 'data')
 		call add(cmd, '--data')
 		call add(cmd, json_encode(a:options['data']))
 	endif
 
-	if(has_key(a:options, 'user'))
+	if has_key(a:options, 'user')
 		call add(cmd, '--user')
 		call add(cmd, a:options['user'])
 	endif
@@ -94,7 +94,7 @@ endfu
 
 fu! critiq#request#await_response()
 	let cnt = 10000
-	while(!empty(s:requests))
+	while !empty(s:requests)
 		sleep 10m
 		let cnt -= 10
 		if cnt == 0

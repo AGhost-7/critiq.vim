@@ -11,8 +11,8 @@ if !exists('g:critiq_github_url')
 endif
 
 fu! s:check_gh_error(response)
-	if(a:response['code'] != 200)
-		if(has_key(a:response['body'], 'errors'))
+	if a:response['code'] >= 300 || a:response['code'] < 200
+		if has_key(a:response['body'], 'errors')
 			throw a:response['body']['errors'][0]
 		else
 			throw a:response['code'] . ': ' . a:response['body']['message'] . ' at url ' . a:response['url']
@@ -42,7 +42,7 @@ fu! s:on_list_reviews(response)
 	call remove(reviews['pending'], id)
 
 	for pr in reviews['response']['body']
-		if(pr['number'] == pr_number)
+		if pr['number'] == pr_number
 			let pr['reviews'] = a:response['body']
 			break
 		endif
@@ -80,6 +80,28 @@ fu! critiq#github#list_open_prs(callback)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
 
+fu! s:on_pull_request(response)
+endfu
+
+fu! s:on_pull_request(response)
+	let id = a:response.id
+	let request = s:requests[id]
+	call remove(s:requests, id)
+	call s:check_gh_error(a:response)
+	call request['callback'](a:response)
+endfu
+
+" Loads the pull request from the issue
+fu! critiq#github#full_pull_request(issue, callback)
+	let opts = {
+		\ 'user': s:user . ':' . s:pass,
+		\ 'callback': function('s:on_pull_request'),
+		\ }
+	let url = s:repo_url() . '/pulls/' . a:issue['number']
+	let id = critiq#request#send(url, opts)
+	let s:requests[id] = { 'callback': a:callback }
+endfu
+
 fu! s:on_diff(response)
 	let id = a:response['id']
 	let request = s:requests[id]
@@ -111,7 +133,7 @@ fu! critiq#github#submit_review(pr, event, body)
 		\ 'event': a:event,
 		\	'comments': [],
 		\ }
-		
+
 	let opts = {
 		\ 'method': 'POST',
 		\ 'user': s:user . ':' . s:pass,
@@ -120,6 +142,26 @@ fu! critiq#github#submit_review(pr, event, body)
 		\ }
 	let url = s:repo_url() . '/pulls/' . a:pr['number'] . '/reviews'
 	call critiq#request#send(url, opts)
+endfu
+
+fu! critiq#github#submit_comment(pr, line_diff, body)
+	let data = {
+		\ 'body': a:body,
+		\ 'commit_id': a:pr['head']['sha'],
+		\ 'position': a:line_diff['position'],
+		\ 'path': a:line_diff['file'],
+		\ }
+
+	let opts = {
+		\ 'method': 'POST',
+		\ 'user': s:user . ':' . s:pass,
+		\ 'callback': function('s:check_gh_error'),
+		\ 'data': data,
+		\ }
+
+	let url = s:repo_url() . '/pulls/' . a:pr['number'] . '/comments'
+
+	let id = critiq#request#send(url, opts)
 endfu
 
 fu! critiq#github#merge_pr(pr)
@@ -135,6 +177,34 @@ endfu
 fu! critiq#github#browse_pr(pr)
 	let url = 'https://github.com/' . s:repo . '/pull/' . a:pr['number']
 	call netrw#BrowseX(url, 0)
+endfu
+
+fu! s:on_pr_comments(response)
+	let id = a:response['id']
+	let request = s:requests[id]
+	call remove(s:requests, id)
+	call s:check_gh_error(a:response)
+	call request['callback'](a:response)
+endfu
+
+fu! critiq#github#pr_comments(pr, callback)
+	let opts = {
+		\ 'user': s:user . ':' . s:pass,
+		\ 'callback': function('s:on_pr_comments'),
+		\ }
+
+	let url = s:repo_url() . '/pulls/' . a:pr['number'] . '/comments'
+	let id = critiq#request#send(url, opts)
+	let s:requests[id] = { 'callback': a:callback }
+endfu
+
+fu! critiq#github#checkout(pr)
+	let sha = a:pr.head.sha
+	let branch = a:pr.head.ref
+	let remote_branch = 'pull/' . a:pr.number . '/head:' . branch
+	call system('git fetch origin ' . shellescape(remote_branch))
+	call system('git checkout ' . shellescape(branch))
+	return branch
 endfu
 
 let s:repo = s:parse_repo(systemlist('git remote -v'))

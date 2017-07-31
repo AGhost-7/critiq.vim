@@ -1,14 +1,34 @@
 
+let g:critiq_comment_symbol = '↪'
+
+fu! critiq#submit_comment()
+	let body = join(getline(1, '$'), '\n')
+	let pr = b:critiq_pull_request
+	call critiq#github#submit_comment(pr, b:critiq_line_diff, body)
+	bd
+endfu
+
 fu! critiq#comment()
-	throw "Not implemented"
+	let line_diff = b:critiq_diff[line('.') - 1]
+	let pr = b:critiq_pull_request
+	if empty(line_diff)
+		echoerr "Invalid comment location"
+	else
+		belowright new
+		resize 10
+		let b:critiq_line_diff = line_diff
+		let b:critiq_pull_request = pr
+		setl buftype=nofile
+		setl noswapfile
+		startinsert
+		nnoremap <buffer> q :bd<cr>
+		nnoremap <buffer> s :call critiq#submit_comment()<cr>
+	endif
 endfu
 
 fu! critiq#checkout()
 	let pr = b:critiq_pull_request
-	let sha = pr['head']['sha']
-	let branch = pr['head']['ref']
-	call system('git fetch origin ' . shellescape('pull/' . pr['number'] . '/head:' . branch))
-	call system('git checkout ' . shellescape(branch))
+	let branch = critiq#github#checkout(pr)
 	echo 'Checked out to branch: ' . branch
 endfu
 
@@ -38,12 +58,8 @@ fu! s:hollow_tab(lines)
 	setl nomodifiable
 endfu
 
-fu! s:on_open_pr_diff(response)
-	let text = a:response['body']
-	let pr = b:critiq_pull_requests[line('.') - 1]
-	call s:hollow_tab(text)
-	let b:critiq_pull_request = pr
-	setf diff
+fu! s:on_open_pr(response)
+	let b:critiq_pull_request = a:response['body']
 	nnoremap <buffer> q :tabc<cr>
 	nnoremap <buffer> ra :call critiq#review('APPROVE')<cr>
 	nnoremap <buffer> rr :call critiq#review('REQUEST_CHANGES')<cr>
@@ -52,6 +68,16 @@ fu! s:on_open_pr_diff(response)
 	nnoremap <buffer> m :call critiq#github#merge_pr(b:critiq_pull_request)<cr>
 	nnoremap <buffer> <leader>c :call critiq#checkout()<cr>
 	nnoremap <buffer> b :call critiq#github#browse_pr(b:critiq_pull_request)<cr>
+endfu
+
+fu! s:on_open_pr_diff(response)
+	let text = a:response['body']
+	let pr = b:critiq_pull_requests[line('.') - 1]
+	call s:hollow_tab(text)
+	let b:critiq_pull_request = pr
+	let b:critiq_diff = critiq#diff#parse(text)
+	setf diff
+	call critiq#github#full_pull_request(pr, function('s:on_open_pr'))
 endfu
 
 fu! critiq#browse_from_pr_list()
