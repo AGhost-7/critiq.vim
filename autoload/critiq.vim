@@ -119,6 +119,7 @@ fu! s:on_open_pr(response)
 	nnoremap <buffer> m :call critiq#github#merge_pr(b:critiq_pull_request)<cr>
 	nnoremap <buffer> <leader>c :call critiq#checkout()<cr>
 	nnoremap <buffer> b :call critiq#github#browse_pr(b:critiq_pull_request)<cr>
+	nnoremap <buffer> <leader>i :call critiq#jira#browse_issue(b:critiq_pull_request)<cr>
 	call s:render_pr_comments()
 endfu
 
