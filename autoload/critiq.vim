@@ -1,6 +1,57 @@
 
 let g:critiq_comment_symbol = '↪'
 
+fu! s:on_pr_comments(response)
+	let b:critiq_pr_comments = a:response.body
+	call s:render_pr_comments()
+endfu
+
+fu! critiq#echo_cursor_comment()
+	if exists('b:critiq_pr_comments')
+		if !exists('b:critiq_last_position') || b:critiq_last_cursor_position != line('.')
+			let b:critiq_last_cursor_position = line('.')
+			if has_key(b:critiq_pr_comments_map, line('.'))
+				let comment = b:critiq_pr_comments_map[line('.')]
+				echom comment.body
+				let b:critiq_echo_cleared = 0
+			elseif exists('b:critiq_echo_cleared') && !b:critiq_echo_cleared
+				echo
+				let b:critiq_echo_cleared = 1
+			endif
+		endif
+	endif
+endfu
+
+fu! s:render_pr_comments()
+	if !exists('b:critiq_pr_comments_loaded') && exists('b:critiq_pull_request')
+		let b:critiq_pr_comments_loaded = 1
+		let b:critiq_pr_comments_map = {}
+		exe 'sign define critiqcomment text=' . g:critiq_comment_symbol . ' texthl=Search'
+
+		let pr = b:critiq_pull_request
+		for comment in b:critiq_pr_comments
+			if pr.head.sha == comment.commit_id
+				let line_number = 1
+				for line_diff in b:critiq_diff
+					if empty(line_diff)
+						let line_number += 1
+						continue
+					endif
+
+					if comment.path == line_diff.file && line_diff.position == comment.position
+						let b:critiq_pr_comments_map[line_number] = comment
+						exe 'sign place ' . line_number ' line=' . line_number . ' name=critiqcomment buffer=' . bufnr('%')
+					endif
+					let line_number += 1
+				endfor
+			endif
+		endfor
+		" This is for truncating the message body...
+		setl shortmess+=T
+		autocmd CursorMoved <buffer> call critiq#echo_cursor_comment()
+	endif
+endfu
+
 fu! critiq#submit_comment()
 	let body = join(getline(1, '$'), '\n')
 	let pr = b:critiq_pull_request
@@ -68,16 +119,17 @@ fu! s:on_open_pr(response)
 	nnoremap <buffer> m :call critiq#github#merge_pr(b:critiq_pull_request)<cr>
 	nnoremap <buffer> <leader>c :call critiq#checkout()<cr>
 	nnoremap <buffer> b :call critiq#github#browse_pr(b:critiq_pull_request)<cr>
+	call s:render_pr_comments()
 endfu
 
 fu! s:on_open_pr_diff(response)
 	let text = a:response['body']
 	let pr = b:critiq_pull_requests[line('.') - 1]
 	call s:hollow_tab(text)
-	let b:critiq_pull_request = pr
 	let b:critiq_diff = critiq#diff#parse(text)
 	setf diff
 	call critiq#github#full_pull_request(pr, function('s:on_open_pr'))
+	call critiq#github#pr_comments(pr, function('s:on_pr_comments'))
 endfu
 
 fu! critiq#browse_from_pr_list()
@@ -85,16 +137,12 @@ fu! critiq#browse_from_pr_list()
 	call critiq#github#browse_pr(pr)
 endfu
 
-
 fu! critiq#open_pr()
 	let pr = b:critiq_pull_requests[line('.') - 1]
 	call critiq#github#diff(pr, function('s:on_open_pr_diff'))
 endfu
 
-fu! critiq#colorize_labels()
-endfu
-
-fu! critiq#on_pull_requests(response)
+fu! s:on_pull_requests(response)
 	let b:critiq_pull_requests = a:response['body']
 
 	let labels = {}
@@ -122,6 +170,6 @@ fu! critiq#on_pull_requests(response)
 endfu
 
 fu! critiq#list_pull_requests()
-	call critiq#github#list_open_prs(function('critiq#on_pull_requests'))
+	call critiq#github#list_open_prs(function('s:on_pull_requests'))
 endfu
 
