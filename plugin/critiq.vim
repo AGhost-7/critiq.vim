@@ -9,6 +9,5 @@ if exists("g:critiq_loaded")
 endif
 let g:critiq_loaded = 1
 
-command! Critiq call critiq#list_pull_requests()
+command! -nargs=* Critiq call critiq#list_pull_requests(<f-args>)
 
-command! CritiqReload call critiq#github#reload_url()

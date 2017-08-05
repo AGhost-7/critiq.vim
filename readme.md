@@ -7,6 +7,7 @@
 - Comments:
 	- Update comment highlights when you submit a comment of your own.
 	- Show outdated comments.
+- Jump to file from diff.
 
 ## References
 - [GV](https://github.com/junegunn/gv.vim) for displaying data.

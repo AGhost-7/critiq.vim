@@ -23,7 +23,7 @@ fu! critiq#echo_cursor_comment()
 endfu
 
 fu! s:render_pr_comments()
-	if !exists('b:critiq_pr_comments_loaded') && exists('b:critiq_pull_request')
+	if !exists('b:critiq_pr_comments_loaded') && exists('b:critiq_pull_request') && exists('b:critiq_pr_comments')
 		let b:critiq_pr_comments_loaded = 1
 		let b:critiq_pr_comments_map = {}
 		exe 'sign define critiqcomment text=' . g:critiq_comment_symbol . ' texthl=Search'
@@ -129,7 +129,7 @@ fu! s:on_open_pr_diff(response)
 	call s:hollow_tab(text)
 	let b:critiq_diff = critiq#diff#parse(text)
 	setf diff
-	call critiq#github#full_pull_request(pr, function('s:on_open_pr'))
+	call critiq#github#pull_request(pr, function('s:on_open_pr'))
 	call critiq#github#pr_comments(pr, function('s:on_pr_comments'))
 endfu
 
@@ -162,7 +162,6 @@ fu! s:on_pull_requests(response)
 		call add(lines, line)
 	endfor
 
-
 	call s:hollow_tab(lines)
 
 	let b:critiq_pull_requests = a:response['body']
@@ -170,7 +169,8 @@ fu! s:on_pull_requests(response)
 	setf critiq_pr_list
 endfu
 
-fu! critiq#list_pull_requests()
-	call critiq#github#list_open_prs(function('s:on_pull_requests'))
+fu! critiq#list_pull_requests(...)
+	let args = [function('s:on_pull_requests')] + a:000
+	call call("critiq#github#list_open_prs", args)
 endfu
 
