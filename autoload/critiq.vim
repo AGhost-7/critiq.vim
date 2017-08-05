@@ -1,5 +1,7 @@
 
-let g:critiq_comment_symbol = '↪'
+if !exists('g:critiq_comment_symbol')
+	let g:critiq_comment_symbol = '↪'
+endif
 
 fu! s:on_pr_comments(response)
 	let b:critiq_pr_comments = a:response.body
@@ -71,9 +73,15 @@ fu! critiq#comment()
 		let b:critiq_pull_request = pr
 		setl buftype=nofile
 		setl noswapfile
+
+		command! -buffer CritiqSubmitComment call critiq#submit_comment()
+
+		if !exists('g:critiq_no_mappings')
+			nnoremap <buffer> q :bd<cr>
+			nnoremap <buffer> s :CritiqSubmitComment<cr>
+		endif
+
 		startinsert
-		nnoremap <buffer> q :bd<cr>
-		nnoremap <buffer> s :call critiq#submit_comment()<cr>
 	endif
 endfu
 
@@ -83,7 +91,7 @@ fu! critiq#checkout()
 	echo 'Checked out to branch: ' . branch
 endfu
 
-fu! critiq#send_review(event)
+fu! critiq#submit_review(event)
 	let body = join(getline(1, '$'), '\n')
 	call critiq#github#submit_review(b:critiq_pull_request, a:event, body)
 	bd
@@ -97,8 +105,16 @@ fu! critiq#review(state)
 	let b:critiq_state = a:state
 	setl buftype=nofile
 	setl noswapfile
+
+	command! -buffer CritiqSubmitReview call critiq#submit_review(b:critiq_state)
+	command! -buffer CritiqBrowsePr call critiq#github#browse(b:critiq_pull_request)
+
+	if !exists('g:critiq_no_mappings')
+		nnoremap <buffer> q :bd<cr>
+		nnoremap <buffer> s :CritiqSubmitReview<cr>
+		nnoremap <buffer> b :CritiqBrowsePr<cr>
+	endif
 	startinsert
-	setf critiq_review
 endfu
 
 fu! s:hollow_tab(lines)
@@ -111,15 +127,28 @@ endfu
 
 fu! s:on_open_pr(response)
 	let b:critiq_pull_request = a:response['body']
-	nnoremap <buffer> q :tabc<cr>
-	nnoremap <buffer> ra :call critiq#review('APPROVE')<cr>
-	nnoremap <buffer> rr :call critiq#review('REQUEST_CHANGES')<cr>
-	nnoremap <buffer> rc :call critiq#review('COMMENT')<cr>
-	nnoremap <buffer> c :call critiq#comment()<cr>
-	nnoremap <buffer> m :call critiq#github#merge_pr(b:critiq_pull_request)<cr>
-	nnoremap <buffer> <leader>c :call critiq#checkout()<cr>
-	nnoremap <buffer> b :call critiq#github#browse_pr(b:critiq_pull_request)<cr>
-	nnoremap <buffer> <leader>i :call critiq#jira#browse_issue(b:critiq_pull_request)<cr>
+
+	command! -buffer CritiqApprove call critiq#review('APPROVE')
+	command! -buffer CritiqRequestChanges call critiq#review('REQUEST_CHANGES')
+	command! -buffer CritiqComment call critiq#review('COMMENT')
+	command! -buffer CritiqCommentLine call critiq#comment()
+	command! -buffer CritiqMerge call critiq#merge_pr(b:critiq_pull_request)<cr>
+	command! -buffer CritiqCheckout call critiq#checkout()
+	command! -buffer CritiqBrowsePr call critiq#github#browse_pr(b:critiq_pull_request)
+	command! -buffer CritiqBrowseIssue call critiq#jira#browse_issue(b:critiq_pull_request)
+
+	if !exists('g:critiq_no_mappings')
+		nnoremap <buffer> q :tabc<cr>
+		nnoremap <buffer> ra :CritiqApprove<cr>
+		nnoremap <buffer> rr :CritiqRequestChanges<cr>
+		nnoremap <buffer> rc :CritiqComment<cr>
+		nnoremap <buffer> c :CritiqCommentLine<cr>
+		nnoremap <buffer> m :CritiqMerge<cr>
+		nnoremap <buffer> <leader>c :CritiqCheckout<cr>
+		nnoremap <buffer> b :CritiqBrowsePr<cr>
+		nnoremap <buffer> <leader>i :CritiqBrowseIssue<cr>
+	endif
+
 	call s:render_pr_comments()
 endfu
 
@@ -166,7 +195,19 @@ fu! s:on_pull_requests(response)
 
 	let b:critiq_pull_requests = a:response['body']
 	let b:critiq_labels = values(labels)
-	setf critiq_pr_list
+
+	command! -buffer CritiqOpenPr call critiq#open_pr()
+	command! -buffer CritiqBrowsePr call critiq#browse_from_pr_list()
+	command! -buffer CritiqBrowseIssue call critiq#jira#cursor_browse_issue()
+
+	if !exists('g:critiq_no_mappings')
+		nnoremap <buffer> q :tabc<cr>
+		nnoremap <buffer> o :CritiqOpenPr<cr>
+		nnoremap <buffer> <cr> :CritiqOpenPr<cr>
+		nnoremap <buffer> b :CritiqBrowsePr<cr>
+		nnoremap <buffer> <leader>i :CritiqBrowseIssue<cr>
+	endif
+
 endfu
 
 fu! critiq#list_pull_requests(...)

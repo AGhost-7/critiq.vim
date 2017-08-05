@@ -1,0 +1,92 @@
+*critiq.txt*  Github code reviews from Neovim.
+
+===============================================================================
+1. Introduction                                           *critiq-introduction*
+
+Critiq provides an interface to open pull requests which allows you to do code
+reviews from your editor.
+
+NOTE: Undocumented commands, functions, mappings, etc are subject to change at
+any time without notice.
+
+===============================================================================
+1. Commands                                                   *critiq-commands*
+
+
+                                                                      *:Critiq*
+:Critiq [args]
+  
+  Views: all
+
+  Using this command will list all open pull requests for the given
+  repositories. For example:
+>
+    :Critiq neovim/neovim vim/vim
+<
+  Would display all open pull requests on the vim and neovim repositories. If
+  no repository is specified, the repository will be extracted from the git
+  origin remote url.
+
+                                                                *:CritiqOpenPr*
+:CritiqOpenPr
+  
+  Views: Pull request list.
+
+  Opens the pull request from the editor in a new tab.
+
+                                                              *:CritiqBrowsePr*
+:CritiqBrowsePr
+  
+  Views: Pull request list, Pull request.
+
+  Open the pull request from the github site. If in pull request listing the
+  pull request this command will open is determined by the location of the
+  cursor.
+
+                                                               *:CritiqApprove*
+:CritiqApprove
+  
+  Views: Pull request.
+
+  Approve the pull request.
+
+                                                        *:CritiqRequestChanges*
+:CritiqRequestChanges
+
+  Views: Pull request.
+
+  Request changes on the pull request.
+
+                                                               *:CritiqComment*
+:CritiqComment
+
+  Views: Pull request.
+
+  Leave a comment on the pull request instead of approving/requesting changes.
+
+                                                           *:CritiqCommentLine*
+:CritiqCommentLine
+
+  Views: Pull request.
+
+  Leave a comment on a specific line. The line where the comment will be shown
+  is determined by the location of the cursor.
+
+                                                                 *:CritiqMerge*
+:CritiqMerge
+
+  Views: Pull request.
+
+  Merge the pull request.
+
+                                                              *:CritiqCheckout*
+:CritiqCheckout
+
+  Views: Pull request.
+
+  Will locally check you out to the branch of the pull request if the current
+  working directory is the correct git repository.
+
+===============================================================================
+
+  vim:tw=78:ts=2:sts=2:sw=2:ft=help:norl:expandtab:
