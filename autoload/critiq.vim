@@ -4,16 +4,16 @@ if !exists('g:critiq_comment_symbol')
 endif
 
 fu! s:on_pr_comments(response)
-	let b:critiq_pr_comments = a:response.body
+	let t:critiq_pr_comments = a:response.body
 	call s:render_pr_comments()
 endfu
 
 fu! critiq#echo_cursor_comment()
-	if exists('b:critiq_pr_comments')
+	if exists('t:critiq_pr_comments')
 		if !exists('b:critiq_last_position') || b:critiq_last_cursor_position != line('.')
 			let b:critiq_last_cursor_position = line('.')
-			if has_key(b:critiq_pr_comments_map, line('.'))
-				let comment = b:critiq_pr_comments_map[line('.')]
+			if has_key(t:critiq_pr_comments_map, line('.'))
+				let comment = t:critiq_pr_comments_map[line('.')]
 				echom comment.body
 				let b:critiq_echo_cleared = 0
 			elseif exists('b:critiq_echo_cleared') && !b:critiq_echo_cleared
@@ -25,23 +25,23 @@ fu! critiq#echo_cursor_comment()
 endfu
 
 fu! s:render_pr_comments()
-	if !exists('b:critiq_pr_comments_loaded') && exists('b:critiq_pull_request') && exists('b:critiq_pr_comments')
-		let b:critiq_pr_comments_loaded = 1
-		let b:critiq_pr_comments_map = {}
+	if !exists('t:critiq_pr_comments_loaded') && exists('t:critiq_pull_request') && exists('t:critiq_pr_comments')
+		let t:critiq_pr_comments_loaded = 1
+		let t:critiq_pr_comments_map = {}
 		exe 'sign define critiqcomment text=' . g:critiq_comment_symbol . ' texthl=Search'
 
-		let pr = b:critiq_pull_request
-		for comment in b:critiq_pr_comments
+		let pr = t:critiq_pull_request
+		for comment in t:critiq_pr_comments
 			if pr.head.sha == comment.commit_id
 				let line_number = 1
-				for line_diff in b:critiq_diff
+				for line_diff in t:critiq_pr_diff
 					if empty(line_diff)
 						let line_number += 1
 						continue
 					endif
 
 					if comment.path == line_diff.file && line_diff.position == comment.position
-						let b:critiq_pr_comments_map[line_number] = comment
+						let t:critiq_pr_comments_map[line_number] = comment
 						exe 'sign place ' . line_number ' line=' . line_number . ' name=critiqcomment buffer=' . bufnr('%')
 					endif
 					let line_number += 1
@@ -56,21 +56,21 @@ endfu
 
 fu! critiq#submit_comment()
 	let body = join(getline(1, '$'), '\n')
-	let pr = b:critiq_pull_request
+	let pr = t:critiq_pull_request
 	call critiq#github#submit_comment(pr, b:critiq_line_diff, body)
 	bd
 endfu
 
 fu! critiq#comment()
-	let line_diff = b:critiq_diff[line('.') - 1]
-	let pr = b:critiq_pull_request
+	let line_diff = t:critiq_pr_diff[line('.') - 1]
+	let pr = t:critiq_pull_request
 	if empty(line_diff)
 		echoerr "Invalid comment location"
 	else
 		belowright new
 		resize 10
 		let b:critiq_line_diff = line_diff
-		let b:critiq_pull_request = pr
+		let t:critiq_pull_request = pr
 		setl buftype=nofile
 		setl noswapfile
 
@@ -86,28 +86,28 @@ fu! critiq#comment()
 endfu
 
 fu! critiq#checkout()
-	let pr = b:critiq_pull_request
+	let pr = t:critiq_pull_request
 	let branch = critiq#github#checkout(pr)
 	echo 'Checked out to branch: ' . branch
 endfu
 
 fu! critiq#submit_review(event)
 	let body = join(getline(1, '$'), '\n')
-	call critiq#github#submit_review(b:critiq_pull_request, a:event, body)
+	call critiq#github#submit_review(t:critiq_pull_request, a:event, body)
 	bd
 endfu
 
 fu! critiq#review(state)
-	let pr = b:critiq_pull_request
+	let pr = t:critiq_pull_request
 	belowright new
 	resize 10
-	let b:critiq_pull_request = pr
+	let t:critiq_pull_request = pr
 	let b:critiq_state = a:state
 	setl buftype=nofile
 	setl noswapfile
 
 	command! -buffer CritiqSubmitReview call critiq#submit_review(b:critiq_state)
-	command! -buffer CritiqBrowsePr call critiq#github#browse(b:critiq_pull_request)
+	command! -buffer CritiqBrowsePr call critiq#github#browse(t:critiq_pull_request)
 
 	if !exists('g:critiq_no_mappings')
 		nnoremap <buffer> q :bd<cr>
@@ -126,16 +126,17 @@ fu! s:hollow_tab(lines)
 endfu
 
 fu! s:on_open_pr(response)
-	let b:critiq_pull_request = a:response['body']
+	let t:critiq_pull_request = a:response['body']
 
 	command! -buffer CritiqApprove call critiq#review('APPROVE')
 	command! -buffer CritiqRequestChanges call critiq#review('REQUEST_CHANGES')
 	command! -buffer CritiqComment call critiq#review('COMMENT')
 	command! -buffer CritiqCommentLine call critiq#comment()
-	command! -buffer CritiqMerge call critiq#merge_pr(b:critiq_pull_request)<cr>
+	command! -buffer CritiqMerge call critiq#merge_pr(t:critiq_pull_request)<cr>
 	command! -buffer CritiqCheckout call critiq#checkout()
-	command! -buffer CritiqBrowsePr call critiq#github#browse_pr(b:critiq_pull_request)
-	command! -buffer CritiqBrowseIssue call critiq#jira#browse_issue(b:critiq_pull_request)
+	command! -buffer CritiqBrowsePr call critiq#github#browse_pr(t:critiq_pull_request)
+	command! -buffer CritiqBrowseIssue call critiq#jira#browse_issue(t:critiq_pull_request)
+	command! -buffer CritiqOpenFile call critiq#open_file()
 
 	if !exists('g:critiq_no_mappings')
 		nnoremap <buffer> q :tabc<cr>
@@ -147,33 +148,46 @@ fu! s:on_open_pr(response)
 		nnoremap <buffer> <leader>c :CritiqCheckout<cr>
 		nnoremap <buffer> b :CritiqBrowsePr<cr>
 		nnoremap <buffer> <leader>i :CritiqBrowseIssue<cr>
+		nnoremap <buffer> o :CritiqOpenFile<cr>
 	endif
 
 	call s:render_pr_comments()
 endfu
 
+fu! critiq#open_file()
+	let line_diff = t:critiq_pr_diff[line('.') - 1]
+	if !empty(line_diff)
+		exe 'botright vsplit ' line_diff.file
+
+		exe ':' line_diff.position
+
+		nnoremap <buffer> q :bd<cr>
+		set nomodifiable
+	endif
+endfu
+
 fu! s:on_open_pr_diff(response)
 	let text = a:response['body']
-	let pr = b:critiq_pull_requests[line('.') - 1]
+	let pr = t:critiq_pull_requests[line('.') - 1]
 	call s:hollow_tab(text)
-	let b:critiq_diff = critiq#diff#parse(text)
+	let t:critiq_pr_diff = critiq#diff#parse(text)
 	setf diff
 	call critiq#github#pull_request(pr, function('s:on_open_pr'))
 	call critiq#github#pr_comments(pr, function('s:on_pr_comments'))
 endfu
 
 fu! critiq#browse_from_pr_list()
-	let pr = b:critiq_pull_requests[line('.') - 1]
+	let pr = t:critiq_pull_requests[line('.') - 1]
 	call critiq#github#browse_pr(pr)
 endfu
 
 fu! critiq#open_pr()
-	let pr = b:critiq_pull_requests[line('.') - 1]
+	let pr = t:critiq_pull_requests[line('.') - 1]
 	call critiq#github#diff(pr, function('s:on_open_pr_diff'))
 endfu
 
 fu! s:on_pull_requests(response)
-	let b:critiq_pull_requests = a:response['body']
+	let t:critiq_pull_requests = a:response['body']
 
 	let labels = {}
 	let lines = []
@@ -193,8 +207,7 @@ fu! s:on_pull_requests(response)
 
 	call s:hollow_tab(lines)
 
-	let b:critiq_pull_requests = a:response['body']
-	let b:critiq_labels = values(labels)
+	let t:critiq_pull_requests = a:response['body']
 
 	command! -buffer CritiqOpenPr call critiq#open_pr()
 	command! -buffer CritiqBrowsePr call critiq#browse_from_pr_list()
