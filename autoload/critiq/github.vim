@@ -58,24 +58,24 @@ fu! s:on_list_reviews(response)
 
 endfu
 
-fu! s:on_list_open_prs(response)
+fu! s:on_list_open_prs(response) abort
 	let id = a:response['id']
 	let request = s:requests[id]
 	call remove(s:requests, id)
 
 	call s:check_gh_error(a:response)
-	let a:response['body'] = a:response['body']['items']
-	call request['callback'](a:response)
+	let prs = a:response.body.items
+	let total = a:response.body.total_count
+	call request['callback'](prs, total)
 endfu
 
-fu! critiq#github#list_open_prs(callback, ...)
+fu! critiq#github#list_open_prs(callback, page, ...)
 
 	let opts = {
 		\ 'user': s:user . ':' . s:pass,
 		\ 'callback': function('s:on_list_open_prs'),
 		\ }
 
-	let page = 1
 	let base_url = g:critiq_github_url . '/search/issues'
 
 	if a:0 == 0
@@ -89,7 +89,7 @@ fu! critiq#github#list_open_prs(callback, ...)
 		let search_query .= 'is:pr+state:open'
 	endif
 
-	let url = base_url . '?per_page=50&page=' . page . '&' . search_query
+	let url = base_url . '?per_page=50&page=' . a:page . '&' . search_query
 
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
@@ -114,7 +114,7 @@ fu! critiq#github#pull_request(issue, callback)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
 
-fu! s:on_diff(response)
+fu! s:on_diff(response) abort
 	let id = a:response['id']
 	let request = s:requests[id]
 	call remove(s:requests, id)
@@ -191,7 +191,7 @@ fu! critiq#github#browse_pr(pr)
 	call netrw#BrowseX(url, 0)
 endfu
 
-fu! s:on_pr_comments(response)
+fu! s:on_pr_comments(response) abort
 	let id = a:response['id']
 	let request = s:requests[id]
 	call remove(s:requests, id)

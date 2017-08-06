@@ -95,6 +95,12 @@ any time without notice.
   Open the file in the diff. Relies on the current working directory to be
   the correct git repository and the correct branch for the pull request.
 
+                                                           *:CritiqLoadMorePrs*
+:CritiqLoadMorePrs
+
+  Views: Pull request list.
+
+  Loads more open pull requests into the pull requests listing.
 
 ===============================================================================
 

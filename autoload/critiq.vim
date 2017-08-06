@@ -120,7 +120,6 @@ fu! critiq#review(state)
 endfu
 
 fu! s:hollow_tab(lines)
-	tabnew
 	setl buftype=nofile
 	setl noswapfile
 	call setline(1, a:lines)
@@ -171,6 +170,7 @@ endfu
 fu! s:on_open_pr_diff(response)
 	let text = a:response['body']
 	let pr = t:critiq_pull_requests[line('.') - 1]
+	tabnew
 	call s:hollow_tab(text)
 	let t:critiq_pr_diff = critiq#diff#parse(text)
 	setf diff
@@ -188,16 +188,31 @@ fu! critiq#open_pr()
 	call critiq#github#diff(pr, function('s:on_open_pr_diff'))
 endfu
 
-fu! s:on_pull_requests(response)
-	let t:critiq_pull_requests = a:response['body']
+fu! s:on_load_more_prs(prs, total)
+	let t:critiq_pull_requests = t:critiq_pull_requests + a:prs
+	let lines = s:format_pr_list(a:prs)
+	setl modifiable
+	call setline('$', lines)
+	setl nomodifiable
+endfu
 
-	let labels = {}
+fu! critiq#load_more_prs()
+	if len(t:critiq_pull_requests) < t:critiq_pull_request_total
+		let t:critiq_pull_request_page += 1
+		let args = [function('s:on_load_more_prs'), t:critiq_pull_request_page] +
+			\ t:critiq_repositories
+		call call("critiq#github#list_open_prs", args)
+	else
+		echoerr 'No more pull requests to load'
+	endif
+endfu
+
+fu! s:format_pr_list(prs)
 	let lines = []
-	for pr in a:response['body']
+	for pr in a:prs
 		let line = '#' . pr['number'] . ' (' . pr['user']['login'] . '): ' . pr['title'] . ' '
 		let i = 0
 		for label in pr['labels']
-			let labels[label['id']] = label
 			let line .= '[' . label['name'] . ']'
 			let i += 1
 			if(i < len(pr['labels']))
@@ -206,16 +221,23 @@ fu! s:on_pull_requests(response)
 		endfor
 		call add(lines, line)
 	endfor
+	return lines
+endfu
+
+fu! s:on_pull_requests(prs, total)
+	let t:critiq_pull_requests = a:prs
+	let t:critiq_pull_request_total = a:total
+	let lines = s:format_pr_list(a:prs)
 
 	call s:hollow_tab(lines)
-
-	let t:critiq_pull_requests = a:response['body']
 
 	command! -buffer CritiqOpenPr call critiq#open_pr()
 	command! -buffer CritiqBrowsePr call critiq#browse_from_pr_list()
 	command! -buffer CritiqBrowseIssue call critiq#jira#cursor_browse_issue()
+	command! -buffer CritiqLoadMorePrs call critiq#load_more_prs()
 
 	if !exists('g:critiq_no_mappings')
+		nnoremap <buffer> l :CritiqLoadMorePrs<cr>
 		nnoremap <buffer> q :tabc<cr>
 		nnoremap <buffer> o :CritiqOpenPr<cr>
 		nnoremap <buffer> <cr> :CritiqOpenPr<cr>
@@ -226,7 +248,10 @@ fu! s:on_pull_requests(response)
 endfu
 
 fu! critiq#list_pull_requests(...)
-	let args = [function('s:on_pull_requests')] + a:000
+	tabnew
+	let t:critiq_pull_request_page = 1
+	let t:critiq_repositories = a:000
+	let args = [function('s:on_pull_requests'), 1] + a:000
 	call call("critiq#github#list_open_prs", args)
 endfu
 
