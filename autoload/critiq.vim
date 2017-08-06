@@ -55,7 +55,9 @@ fu! s:render_pr_comments()
 endfu
 
 fu! critiq#submit_comment()
-	let body = join(getline(1, '$'), '\n')
+	" For some reason double quotes are causing this to display line breaks
+	" properly...
+	let body = join(getline(1, '$'), "\n")
 	let pr = t:critiq_pull_request
 	call critiq#github#submit_comment(pr, b:critiq_line_diff, body)
 	bd
@@ -92,7 +94,7 @@ fu! critiq#checkout()
 endfu
 
 fu! critiq#submit_review(event)
-	let body = join(getline(1, '$'), '\n')
+	let body = join(getline(1, '$'), "\n")
 	call critiq#github#submit_review(t:critiq_pull_request, a:event, body)
 	bd
 endfu
