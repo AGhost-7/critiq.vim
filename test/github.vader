@@ -16,7 +16,7 @@ Execute(lists open prs):
 Execute(fetches a diff):
   call critiq#github#diff(g:pr_issues[0], function('s:on_response'))
   call critiq#request#await_response()
-  AssertEqual ['hello diff'], g:last_response[0]['body']
+  AssertEqual 'hello diff', g:last_response[0]['body'][0]
 
 Execute(fetch full pr):
   call critiq#github#pull_request(g:pr_issues[0], function('s:on_response'))
