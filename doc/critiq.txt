@@ -82,7 +82,7 @@ any time without notice.
                                                               *:CritiqCheckout*
 :CritiqCheckout
 
-  Views: Pull request.
+Views: Pull request.
 
   Will locally check you out to the branch of the pull request if the current
   working directory is the correct git repository.
@@ -101,6 +101,48 @@ any time without notice.
   Views: Pull request list.
 
   Loads more open pull requests into the pull requests listing.
+
+
+===============================================================================
+2. Autocommands                                                *critiq-autocmd*
+
+To allow users to customize the different views, custom autocomand events are
+fired if specified. For example, if you wanted to change the `o` mapping on
+the pull request list to do something else, you could do the following:
+>
+  fu! s:on_pr_list()
+    nnoremap <buffer> o :CritiqBrowsePr<cr>
+  endfu
+
+  autocmd User CritiqPrList call s:on_pr_list()
+<
+
+                                                        *critiq-autocmd-review*
+CritiqReview
+
+  Triggered when the buffer for the pull request review is created.
+
+                                                            *critiq-autocmd-pr*
+CritiqPr
+  
+  Executes when the pull request diff is displayed.
+
+                                                       *critiq-autocmd-pr-list*
+CritiqPrList
+
+  Executes when the initial view with multiple pull requests is displayed.
+
+                                                       *critiq-autocmd-comment*
+CritiqComment
+
+  Executed when the comment buffer is shown.
+
+                                                     *critiq-autocmd-open-file*
+CritiqOpenFile
+
+  Event triggers when a file is opened from the diff using the command
+  `CritiqOpenFile`.
+
 
 ===============================================================================
 

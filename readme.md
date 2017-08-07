@@ -2,7 +2,6 @@
 - Comments:
 	- Update comment highlights when you submit a comment of your own.
 	- Show outdated comments.
-- Make mappings customizable with user defined auto commands (with `doautocmd`).
 - Docs:
 	- Document mappings.
 	- Document configuration options.

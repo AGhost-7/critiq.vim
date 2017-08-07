@@ -1,1 +1,7 @@
 set rtp+=.,../vader
+
+autocmd User CritiqReview let g:critiq_autocmd_review = 1
+autocmd User CritiqPr let g:critiq_autocmd_pr = 1
+autocmd User CritiqPrList let g:critiq_autocmd_pr_list = 1
+autocmd User CritiqComment let g:critiq_autocmd_comment = 1
+autocmd User CritiqOpenFile let g:critiq_autocmd_open_file = 1

@@ -3,6 +3,12 @@ if !exists('g:critiq_comment_symbol')
 	let g:critiq_comment_symbol = '↪'
 endif
 
+fu! s:trigger_event(event)
+	if exists('#User#' . a:event)
+		exe 'doautocmd User ' a:event
+	endif
+endfu
+
 fu! s:on_pr_comments(response)
 	let t:critiq_pr_comments = a:response.body
 	call s:render_pr_comments()
@@ -83,6 +89,8 @@ fu! critiq#comment()
 			nnoremap <buffer> s :CritiqSubmitComment<cr>
 		endif
 
+		call s:trigger_event('CritiqComment')
+
 		startinsert
 	endif
 endfu
@@ -116,6 +124,9 @@ fu! critiq#review(state)
 		nnoremap <buffer> s :CritiqSubmitReview<cr>
 		nnoremap <buffer> b :CritiqBrowsePr<cr>
 	endif
+
+	call s:trigger_event('CritiqReview')
+
 	startinsert
 endfu
 
@@ -152,6 +163,8 @@ fu! s:on_open_pr(response)
 		nnoremap <buffer> o :CritiqOpenFile<cr>
 	endif
 
+	call s:trigger_event("CritiqPr")
+
 	call s:render_pr_comments()
 endfu
 
@@ -162,7 +175,12 @@ fu! critiq#open_file()
 
 		exe ':' line_diff.position
 
-		nnoremap <buffer> q :bd<cr>
+		if !exists("g:critiq_no_mappings")
+			nnoremap <buffer> q :bd<cr>
+		endif
+
+		call s:trigger_event("CritiqOpenFile")
+
 		set nomodifiable
 	endif
 endfu
@@ -244,6 +262,8 @@ fu! s:on_pull_requests(prs, total)
 		nnoremap <buffer> b :CritiqBrowsePr<cr>
 		nnoremap <buffer> <leader>i :CritiqBrowseIssue<cr>
 	endif
+	
+	call s:trigger_event('CritiqPrList')
 
 endfu
 
