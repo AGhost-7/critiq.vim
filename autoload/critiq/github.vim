@@ -118,7 +118,6 @@ fu! s:on_diff(response) abort
 	let id = a:response['id']
 	let request = s:requests[id]
 	call remove(s:requests, id)
-
 	call s:check_gh_error(a:response)
 
 	call request['callback'](a:response)
@@ -218,5 +217,4 @@ fu! critiq#github#checkout(pr)
 	call system('git checkout ' . shellescape(branch))
 	return branch
 endfu
-
 

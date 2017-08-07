@@ -1,0 +1,15 @@
+sudo: required
+dist: trusty
+language: python
+python:
+  - "3.5"
+install:
+  - pip install -r requirements.txt
+  - sudo add-apt-repository ppa:neovim-ppa/stable
+  - sudo apt-get update
+  - sudo apt-get install neovim -y
+  - git clone https://github.com/junegunn/vader.vim.git ../vader
+before_script:
+  - ./test/mocks/api.py &
+script:
+  - nvim -u test/fixtures/vimrc -c 'Vader! test/*'

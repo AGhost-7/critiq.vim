@@ -33,6 +33,7 @@ fu! s:exit_handler(id, data, event)
 			let response['body'] = json_decode(join(body, ''))
 		endif
 	endif
+	let s:last_response = response
 	call response['options']['callback'](response)
 endfu
 
@@ -90,6 +91,10 @@ fu! critiq#request#send(url, options)
 		\ }
 
 	return id
+endfu
+
+fu! critiq#request#last_response()
+	return s:last_response
 endfu
 
 fu! critiq#request#await_response()

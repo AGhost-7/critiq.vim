@@ -1,0 +1,12 @@
+{
+	"total_count": 1,
+	"items": [
+		{
+			"repository_url": "localhost:5000/repos/AGhost-7/critiq.vim",
+			"title": "Example pull request",
+			"body": "Example pr body",
+			"number": 1,
+			"labels": []
+		}
+	]
+}
