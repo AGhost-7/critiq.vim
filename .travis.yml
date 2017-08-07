@@ -1,15 +1,8 @@
 sudo: required
 dist: trusty
-language: python
-python:
-  - "3.5"
+services:
+  - docker
 install:
-  - pip install -r requirements.txt
-  - sudo add-apt-repository ppa:neovim-ppa/stable -y
-  - sudo apt-get update
-  - sudo apt-get install neovim -y
-  - git clone https://github.com/junegunn/vader.vim.git ../vader
-before_script:
-  - ./test/mocks/api.py &
+  - docker build -t aghost7/critiq-testbed .
 script:
-  - nvim -u test/fixtures/vimrc -c 'Vader! test/*'
+  - docker run --rm -ti -v $PWD:/testplugin aghost7/critiq-testbed
