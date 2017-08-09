@@ -13,7 +13,16 @@ endif
 fu! s:check_gh_error(response)
 	if a:response['code'] >= 300 || a:response['code'] < 200
 		if has_key(a:response['body'], 'errors')
-			throw a:response['body']['errors'][0]
+			let message = a:response['body']['message'] . ': '
+			let i = 0
+			for error in a:response['body']['errors']
+				let message .= error['field']
+				let i += 1
+				if len(a:response['body']['errors']) > i
+					let message += ', '
+				endif
+			endfor
+			throw message
 		else
 			throw a:response['code'] . ': ' . a:response['body']['message'] . ' at url ' . a:response['url']
 		endif

@@ -144,7 +144,7 @@ fu! s:on_open_pr(response)
 	command! -buffer CritiqRequestChanges call critiq#review('REQUEST_CHANGES')
 	command! -buffer CritiqComment call critiq#review('COMMENT')
 	command! -buffer CritiqCommentLine call critiq#comment()
-	command! -buffer CritiqMerge call critiq#merge_pr(t:critiq_pull_request)<cr>
+	command! -buffer CritiqMerge call critiq#github#merge_pr(t:critiq_pull_request)
 	command! -buffer CritiqCheckout call critiq#checkout()
 	command! -buffer CritiqBrowsePr call critiq#github#browse_pr(t:critiq_pull_request)
 	command! -buffer CritiqBrowseIssue call critiq#jira#browse_issue(t:critiq_pull_request)
