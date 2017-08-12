@@ -9,8 +9,20 @@ reviews from your editor.
 NOTE: Undocumented commands, functions, mappings, etc are subject to change at
 any time without notice.
 
+
 ===============================================================================
-1. Commands                                                   *critiq-commands*
+2. Getting Started                                     *critiq-getting-started*
+
+Start by placing your Github user name and password (or api token) into the
+`GH_USER` and `GH_PASS` environment variables repectively.
+
+After doing this, move to the directory for your git repository where there
+are pull requests to review. Run `:Critiq` to start your pull request
+reviewing session.
+
+
+===============================================================================
+3. Commands                                                   *critiq-commands*
 
 
                                                                       *:Critiq*
@@ -104,7 +116,7 @@ Views: Pull request.
 
 
 ===============================================================================
-2. Autocommands                                                *critiq-autocmd*
+4. Autocommands                                                *critiq-autocmd*
 
 To allow users to customize the different views, custom autocomand events are
 fired if specified. For example, if you wanted to change the `o` mapping on
@@ -143,6 +155,34 @@ CritiqOpenFile
   Event triggers when a file is opened from the diff using the command
   `CritiqOpenFile`.
 
+
+===============================================================================
+5. Configuration Variables                                   *critiq-variables*
+
+
+                                                              *critiq-$GH_USER*
+$GH_USER
+  
+  User name for authenticating with github. If the environment variable is not
+  set this plugin will refuse to function.
+
+                                                              *critiq-$GH_PASS*
+$GH_PASS
+  
+  Required environment variable for authenticating with Github. This
+  environment variable can be an API token instead of your actual password.
+
+                                                             *critiq-$JIRA_URL*
+$JIRA_URL
+
+  Required environment variable if you want to use the builtin Jira
+  integration for issues.
+
+                                                  *critiq-g:critiq_no_mappings*
+g:critiq_no_mappings
+
+  This disables all the default key mappings. By default all mappings are
+  enabled.
 
 ===============================================================================
 

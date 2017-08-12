@@ -4,7 +4,6 @@
 	- Show outdated comments.
 - Docs:
 	- Document mappings.
-	- Document configuration options.
 - Metadata buffer in PR tab:
 	- Show status (Rejected, approved, etc).
 	- Merge target.
