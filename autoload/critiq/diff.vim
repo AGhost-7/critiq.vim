@@ -20,6 +20,7 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map)
 	let chunk_offset = [0, 0, 0, 0]
 	let add_position = 0
 	let rm_position = 0
+	let file_index = 0
 
 	while a:iterator.index < a:iterator.end
 		let line = a:iterator.data[a:iterator.index]
@@ -27,11 +28,12 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map)
 			break
 		endif
 		let a:iterator.index += 1
-		if match(line,'+') == 0
+		if match(line, '+') == 0
 			call add(a:diff_map, {
 				\ 'file': a:current_file,
 				\ 'offset': chunk_offset,
-				\ 'position': add_position
+				\ 'position': add_position,
+				\ 'file_index': file_index,
 				\ })
 			let add_position += 1
 		elseif match(line, '-') == 0
@@ -39,6 +41,7 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map)
 				\ 'file': a:current_file,
 				\ 'offset': chunk_offset,
 				\ 'position': rm_position,
+				\ 'file_index': file_index,
 				\ })
 			let rm_position += 1
 		elseif match(line, ' ') == 0
@@ -47,11 +50,13 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map)
 			call add(a:diff_map, {
 				\ 'file': a:current_file,
 				\ 'offset': chunk_offset,
-				\ 'position': add_position
+				\ 'position': add_position,
+				\ 'file_index': file_index,
 				\ })
 			let add_position += 1
 			let rm_position += 1
 		else
+			call critiq#log('@@ file index: ' . file_index)
 			let offset_match = matchlist(line, s:offset_pattern)
 			if !empty(offset_match)
 				let chunk_offset = map(offset_match[1:4], 'str2nr(v:val)')
@@ -60,6 +65,7 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map)
 				call add(a:diff_map, 0)
 			endif
 		endif
+		let file_index += 1
 	endwhile
 endfu
 

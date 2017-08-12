@@ -168,7 +168,7 @@ fu! critiq#github#submit_comment(pr, line_diff, body)
 	let data = {
 		\ 'body': a:body,
 		\ 'commit_id': a:pr['head']['sha'],
-		\ 'position': a:line_diff['position'],
+		\ 'position': a:line_diff['file_index'],
 		\ 'path': a:line_diff['file'],
 		\ }
 

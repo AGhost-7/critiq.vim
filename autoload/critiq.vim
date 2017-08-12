@@ -46,7 +46,7 @@ fu! s:render_pr_comments()
 						continue
 					endif
 
-					if comment.path == line_diff.file && line_diff.position == comment.position
+					if comment.path == line_diff.file && line_diff.file_index == comment.position
 						let t:critiq_pr_comments_map[line_number] = comment
 						exe 'sign place ' . line_number ' line=' . line_number . ' name=critiqcomment buffer=' . bufnr('%')
 					endif
@@ -273,5 +273,25 @@ fu! critiq#list_pull_requests(...)
 	let t:critiq_repositories = a:000
 	let args = [function('s:on_pull_requests'), 1] + a:000
 	call call("critiq#github#list_open_prs", args)
+endfu
+
+fu! critiq#log(message)
+	if !exists('b:critiq_logs')
+		let b:critiq_logs = []
+	endif
+	call add(b:critiq_logs, a:message)
+	if !exists('t:critiq_logs')
+		let t:critiq_logs = []
+	endif
+	call add(t:critiq_logs, a:message)
+endfu
+
+fu! critiq#show_logs(scope)
+	new
+	exe 'call setline(1, ' . a:scope . ':critiq_logs)'
+	setl noswapfile
+	setl nomodifiable
+	setl buftype=nofile
+	nnoremap <buffer> q :bd<cr>
 endfu
 

@@ -16,3 +16,20 @@ Execute(simple parsing):
   AssertEqual empty(g:diff_map[4]), 1
   AssertEqual g:diff_map[5].file, 'foo.js'
   AssertEqual g:diff_map[6].position, 3
+
+Execute(file index):
+  let lines = [
+    \ 'diff --git a/foo.js b/foo.js',
+    \ 'index bleh',
+    \ '--- a/foo.js',
+    \ '+++ b/foo.js',
+    \ '@@ -0,0 +2,25 @@',
+    \ ' let a = 1',
+    \ '+console.log("baz");',
+    \ '-console.log("bar");',
+    \ ]
+  let g:diff_map = critiq#diff#parse(lines)
+  AssertEqual g:diff_map[5].file_index, 1
+  AssertEqual g:diff_map[6].file_index, 2
+  AssertEqual g:diff_map[7].file_index, 3
+
