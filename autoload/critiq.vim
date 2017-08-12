@@ -69,6 +69,20 @@ fu! critiq#submit_comment()
 	bd
 endfu
 
+fu! s:pr_tab_commands()
+	command! -buffer CritiqBrowsePr call critiq#github#browse_pr(t:critiq_pull_request)
+	command! -buffer CritiqBrowseIssue call critiq#jira#browse_issue(t:critiq_pull_request)
+	command! -buffer CritiqMerge call critiq#github#merge_pr(t:critiq_pull_request)
+	command! -buffer CritiqCheckout call critiq#checkout()
+endfu
+
+fu! s:pr_tab_mappings()
+	nnoremap <buffer> gp :CritiqBrowsePr<cr>
+	nnoremap <buffer> gi :CritiqBrowseIssue<cr>
+	nnoremap <buffer> m :CritiqMerge<cr>
+	nnoremap <buffer> <leader>c :CritiqCheckout<cr>
+endfu
+
 fu! critiq#comment()
 	let line_diff = t:critiq_pr_diff[line('.') - 1]
 	let pr = t:critiq_pull_request
@@ -83,10 +97,12 @@ fu! critiq#comment()
 		setl noswapfile
 
 		command! -buffer CritiqSubmitComment call critiq#submit_comment()
+		call s:pr_tab_commands()
 
 		if !exists('g:critiq_no_mappings')
 			nnoremap <buffer> q :bd<cr>
-			nnoremap <buffer> s :CritiqSubmitComment<cr>
+			nnoremap <buffer> <cr> :CritiqSubmitComment<cr>
+			call s:pr_tab_mappings()
 		endif
 
 		call s:trigger_event('CritiqComment')
@@ -117,12 +133,13 @@ fu! critiq#review(state)
 	setl noswapfile
 
 	command! -buffer CritiqSubmitReview call critiq#submit_review(b:critiq_state)
-	command! -buffer CritiqBrowsePr call critiq#github#browse(t:critiq_pull_request)
+
+	call s:pr_tab_commands()
 
 	if !exists('g:critiq_no_mappings')
 		nnoremap <buffer> q :bd<cr>
-		nnoremap <buffer> s :CritiqSubmitReview<cr>
-		nnoremap <buffer> b :CritiqBrowsePr<cr>
+		nnoremap <buffer> <cr> :CritiqSubmitReview<cr>
+		call s:pr_tab_mappings()
 	endif
 
 	call s:trigger_event('CritiqReview')
@@ -144,11 +161,8 @@ fu! s:on_open_pr(response)
 	command! -buffer CritiqRequestChanges call critiq#review('REQUEST_CHANGES')
 	command! -buffer CritiqComment call critiq#review('COMMENT')
 	command! -buffer CritiqCommentLine call critiq#comment()
-	command! -buffer CritiqMerge call critiq#github#merge_pr(t:critiq_pull_request)
-	command! -buffer CritiqCheckout call critiq#checkout()
-	command! -buffer CritiqBrowsePr call critiq#github#browse_pr(t:critiq_pull_request)
-	command! -buffer CritiqBrowseIssue call critiq#jira#browse_issue(t:critiq_pull_request)
 	command! -buffer CritiqOpenFile call critiq#open_file()
+	call s:pr_tab_commands()
 
 	if !exists('g:critiq_no_mappings')
 		nnoremap <buffer> q :tabc<cr>
@@ -156,11 +170,8 @@ fu! s:on_open_pr(response)
 		nnoremap <buffer> rr :CritiqRequestChanges<cr>
 		nnoremap <buffer> rc :CritiqComment<cr>
 		nnoremap <buffer> c :CritiqCommentLine<cr>
-		nnoremap <buffer> m :CritiqMerge<cr>
-		nnoremap <buffer> <leader>c :CritiqCheckout<cr>
-		nnoremap <buffer> b :CritiqBrowsePr<cr>
-		nnoremap <buffer> <leader>i :CritiqBrowseIssue<cr>
-		nnoremap <buffer> o :CritiqOpenFile<cr>
+		nnoremap <buffer> gf :CritiqOpenFile<cr>
+		call s:pr_tab_mappings()
 	endif
 
 	call s:trigger_event("CritiqPr")
@@ -175,8 +186,11 @@ fu! critiq#open_file()
 
 		exe ':' line_diff.position
 
+		call s:pr_tab_commands()
+
 		if !exists("g:critiq_no_mappings")
 			nnoremap <buffer> q :bd<cr>
+			call s:pr_tab_mappings()
 		endif
 
 		call s:trigger_event("CritiqOpenFile")
@@ -259,8 +273,8 @@ fu! s:on_pull_requests(prs, total)
 		nnoremap <buffer> q :tabc<cr>
 		nnoremap <buffer> o :CritiqOpenPr<cr>
 		nnoremap <buffer> <cr> :CritiqOpenPr<cr>
-		nnoremap <buffer> b :CritiqBrowsePr<cr>
-		nnoremap <buffer> <leader>i :CritiqBrowseIssue<cr>
+		nnoremap <buffer> gp :CritiqBrowsePr<cr>
+		nnoremap <buffer> gi :CritiqBrowseIssue<cr>
 	endif
 	
 	call s:trigger_event('CritiqPrList')
