@@ -33,3 +33,19 @@ Execute(file index):
   AssertEqual g:diff_map[6].file_index, 2
   AssertEqual g:diff_map[7].file_index, 3
 
+Execute(multi chunk file diffs):
+  let lines = [
+    \ 'diff --git a/foo.js b/foo.js',
+    \ 'index bleh',
+    \ '--- a/foo.js',
+    \ '+++ b/foo.js',
+    \ '@@ -0,0 +1,25 @@',
+    \ '+console.log("baz");',
+    \ '@@ -0,0 +10,25 @@',
+    \ '+console.log("bar");',
+    \ ]
+
+    let g:diff_map = critiq#diff#parse(lines)
+    AssertEqual g:diff_map[5].position, 1
+    AssertEqual g:diff_map[7].position, 10
+

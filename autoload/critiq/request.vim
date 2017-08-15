@@ -9,9 +9,14 @@ fu! s:chunk_handler(id, data, event)
 		throw "Could not find http handler"
 	endif
 	let chunks = s:requests[a:id][a:event]
-	for line in a:data
-		call add(chunks, line)
-	endfor
+
+	if len(chunks) == 0
+		call extend(chunks, a:data)
+	else
+		" The last chunk might've been an incomplete line so handle that.
+		let chunks[-1] .= a:data[0]
+		call extend(chunks, a:data[1:])
+	endif
 endfu
 
 fu! s:exit_handler(id, data, event)
