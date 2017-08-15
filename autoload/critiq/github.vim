@@ -227,3 +227,26 @@ fu! critiq#github#checkout(pr)
 	return branch
 endfu
 
+fu! s:on_pr_labels(response)
+	let id = a:response['id']
+	let request = s:requests[id]
+	call remove(s:requests, id)
+	call s:check_gh_error(a:response)
+
+	call request['callback']({
+		\ 'repo': a:response.body,
+		\ 'pr': request.issue.labels,
+		\ })
+endfu
+
+fu! critiq#github#pr_labels(issue, callback)
+	let opts = {
+		\ 'user': s:user . ':' . s:pass,
+		\ 'callback': function('s:on_pr_labels'),
+		\ }
+	let url = s:issue_repo_url(a:issue) . '/labels'
+	let id = critiq#request#send(url, opts)
+
+	let s:requests[id] = { 'callback': a:callback, 'issue': a:issue }
+endfu
+
