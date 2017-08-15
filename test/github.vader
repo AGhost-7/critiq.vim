@@ -38,7 +38,7 @@ Execute(load comments):
   AssertEqual g:last_response[0]['body'][0]['path'], 'foobar.txt'
 
 Execute(submit comment):
-  let line_diff = { 'position': 1, 'file': 'foobar.txt' }
+  let line_diff = { 'file_index': 1, 'file': 'foobar.txt' }
   let body = 'needs more salt and pepper'
   call critiq#github#submit_comment(g:pr_1, line_diff, body)
   call critiq#request#await_response()
