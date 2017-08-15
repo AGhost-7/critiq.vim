@@ -16,7 +16,7 @@ fu! s:skip_metadata(iterator, diff_map)
 	endwhile
 endfu
 
-fu! s:parse_diff_contents(iterator, current_file, diff_map)
+fu! s:parse_diff_contents(iterator, current_file, diff_map) abort
 	let chunk_offset = [0, 0, 0, 0]
 	let add_position = 0
 	let rm_position = 0
@@ -36,6 +36,7 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map)
 				\ 'file_index': file_index,
 				\ })
 			let add_position += 1
+			let file_index += 1
 		elseif match(line, '-') == 0
 			call add(a:diff_map, {
 				\ 'file': a:current_file,
@@ -44,6 +45,7 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map)
 				\ 'file_index': file_index,
 				\ })
 			let rm_position += 1
+			let file_index += 1
 		elseif match(line, ' ') == 0
 			" This isn't a line that was modified, just extra lines provided by the 
 			" diff to get a better visual of what was changed.
@@ -55,23 +57,29 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map)
 				\ })
 			let add_position += 1
 			let rm_position += 1
+			let file_index += 1
+		elseif match(line, '\') == 0
+			" Apparently unified diffs have comments ^^
+			" These do not count towards the file index.
+			call add(a:diff_map, 0)
 		else
-			call critiq#log('@@ file index: ' . file_index)
 			let offset_match = matchlist(line, s:offset_pattern)
 			if !empty(offset_match)
 				let chunk_offset = map(offset_match[1:4], 'str2nr(v:val)')
 				let rm_position = chunk_offset[0]
 				let add_position = chunk_offset[2]
 				call add(a:diff_map, 0)
+				let file_index += 1
+			else
+				throw "Could not parse diff at index " . a:iterator['index']
 			endif
 		endif
-		let file_index += 1
 	endwhile
 endfu
 
-fu! critiq#diff#parse(diff_lines)
+fu! critiq#diff#parse(diff_lines) abort
 
-	let iterator = { 
+	let iterator = {
 		\ 'index': 0,
 		\ 'end': len(a:diff_lines),
 		\ 'data': a:diff_lines
