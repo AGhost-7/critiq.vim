@@ -199,19 +199,8 @@ fu! critiq#open_file()
 	endif
 endfu
 
-fu! critiq#toggle_label()
-	throw "Not implemented"
-endfu
-
-fu! critiq#edit_labels()
-	belowright new
-	resize 10
-	setl buftype=nofile
-	setl noswapfile
-
-	command! -buffer CritiqToggleLabel call critiq#toggle_label()
-	call s:pr_tab_commands()
-
+fu! s:render_pr_labels()
+	set modifiable
 	let repo_labels = t:critiq_pr_labels.repo
 	let pr_labels = t:critiq_pr_labels.pr
 	let lines = []
@@ -230,6 +219,31 @@ fu! critiq#edit_labels()
 	endfor
 
 	call setline(1, lines)
+	set nomodifiable
+endfu
+
+fu! s:on_toggle_label(pr_labels)
+	let t:critiq_pr_labels.pr = a:pr_labels
+	call s:render_pr_labels()
+endfu
+
+fu! critiq#toggle_label()
+	call critiq#github#toggle_label(
+		\ t:critiq_pull_request,
+		\ t:critiq_pr_labels,
+		\ line('.') - 1,
+		\ function('s:on_toggle_label'))
+endfu
+
+fu! critiq#edit_labels()
+	belowright new
+	resize 10
+	setl buftype=nofile
+	setl noswapfile
+
+	command! -buffer CritiqToggleLabel call critiq#toggle_label()
+	call s:pr_tab_commands()
+	call s:render_pr_labels()
 
 	if !exists('g:critiq_no_mappings')
 		nnoremap <buffer> q :bd<cr>
