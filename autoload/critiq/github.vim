@@ -281,7 +281,7 @@ fu! critiq#github#toggle_label(pr, labels, label_index, callback)
 		\ }
 
 	if found
-		let url .= '/' . toggle_label['name']
+		let url .= '/' . substitute(toggle_label['name'], ' ', '%20', 'g')
 		let opts.method = 'DELETE'
 	else
 		call extend(opts, { 'method': 'POST', 'data': [toggle_label.name] })
