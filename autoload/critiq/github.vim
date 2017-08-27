@@ -227,3 +227,69 @@ fu! critiq#github#checkout(pr)
 	return branch
 endfu
 
+fu! s:on_pr_labels(response)
+	let id = a:response['id']
+	let request = s:requests[id]
+	call remove(s:requests, id)
+	call s:check_gh_error(a:response)
+
+	call request['callback']({
+		\ 'repo': a:response.body,
+		\ 'pr': request.issue.labels,
+		\ })
+endfu
+
+fu! critiq#github#pr_labels(issue, callback)
+	let opts = {
+		\ 'user': s:user . ':' . s:pass,
+		\ 'callback': function('s:on_pr_labels'),
+		\ }
+	let url = s:issue_repo_url(a:issue) . '/labels'
+	let id = critiq#request#send(url, opts)
+
+	let s:requests[id] = { 'callback': a:callback, 'issue': a:issue }
+endfu
+
+fu! s:on_toggle_label(response)
+	let id = a:response.id
+	let request = s:requests[id]
+	call remove(s:requests, id)
+	call s:check_gh_error(a:response)
+	call request.callback(a:response.body)
+endfu
+
+fu! critiq#github#toggle_label(pr, labels, label_index, callback)
+	let toggle_label = a:labels.repo[a:label_index]
+
+	let found = 0
+	for label in a:labels.pr
+		if toggle_label.id == label.id
+			let found = 1
+			break
+		endif
+	endfor
+
+	let url = s:pr_repo_url(a:pr) . '/issues/' . a:pr['number'] . '/labels'
+	let request = {
+		\ 'callback': a:callback,
+		\ 'labels': a:labels,
+		\ }
+
+	let opts = {
+		\ 'callback': function('s:on_toggle_label'),
+		\ 'user': s:user . ':' . s:pass
+		\ }
+
+	if found
+		let url .= '/' . substitute(toggle_label['name'], ' ', '%20', 'g')
+		let opts.method = 'DELETE'
+	else
+		call extend(opts, { 'method': 'POST', 'data': [toggle_label.name] })
+		let opts.method = 'POST'
+	endif
+
+	let id = critiq#request#send(url, opts)
+	let s:requests[id] = request
+
+endfu
+

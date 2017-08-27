@@ -114,6 +114,21 @@ Views: Pull request.
 
   Loads more open pull requests into the pull requests listing.
 
+                                                            *:CritiqEditLabels*
+:CritiqEditLabels
+
+  Views: Pull request
+
+  Load a list of the labels which are on the repository with the ones on the
+  pull request marked.
+ 
+                                                           *:CritiqToggleLabel*
+:CritiqToggleLabel
+  
+  Views: Pr labels list.
+
+  Add/remove the label on the given pull request.
+
 
 ===============================================================================
 4. Autocommands                                                *critiq-autocmd*
@@ -154,6 +169,11 @@ CritiqOpenFile
 
   Event triggers when a file is opened from the diff using the command
   `CritiqOpenFile`.
+
+                                                    *critiq-autocmd-edit-label*
+CritiqEditLabel
+
+  Event triggers when `CritiqEditLabel` has finished loading and rendering.
 
 
 ===============================================================================
