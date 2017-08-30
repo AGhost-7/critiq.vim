@@ -195,7 +195,7 @@ fu! critiq#open_file()
 
 		call s:trigger_event("CritiqOpenFile")
 
-		set nomodifiable
+		setl nomodifiable
 	endif
 endfu
 
@@ -219,7 +219,7 @@ fu! s:render_pr_labels()
 	endfor
 
 	call setline(1, lines)
-	set nomodifiable
+	setl nomodifiable
 endfu
 
 fu! s:on_toggle_label(pr_labels)
