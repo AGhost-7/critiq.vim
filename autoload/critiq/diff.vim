@@ -71,7 +71,7 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map) abort
 				call add(a:diff_map, 0)
 				let file_index += 1
 			else
-				throw "Could not parse diff at index " . a:iterator['index']
+				throw 'Could not parse diff at index ' . a:iterator['index'] . ' line "' . line . '"'
 			endif
 		endif
 	endwhile
