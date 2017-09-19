@@ -49,3 +49,17 @@ Execute(multi chunk file diffs):
     AssertEqual g:diff_map[5].position, 1
     AssertEqual g:diff_map[7].position, 10
 
+Execute(file add diffs):
+  let lines = [
+    \ 'diff --git a/another-file.txt b/another-file.txt',
+    \ 'new file mode 100644',
+    \ 'index 0000000..9ca9a87',
+    \ '--- /dev/null',
+    \ '+++ b/another-file.txt',
+    \ '@@ -0,0 +1 @@',
+    \ '+This is another file.',
+    \ ]
+
+  let g:diff_map = critiq#diff#parse(lines)
+
+  AssertEqual g:diff_map[6].position, 1

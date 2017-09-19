@@ -62,6 +62,11 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map) abort
 			" Apparently unified diffs have comments ^^
 			" These do not count towards the file index.
 			call add(a:diff_map, 0)
+		elseif match(line, '@@\s\+-0,0\s\++1\s\+@@') == 0
+			let rm_position = 0
+			let add_position = 1
+			call add(a:diff_map, 0)
+			let file_index += 1
 		else
 			let offset_match = matchlist(line, s:offset_pattern)
 			if !empty(offset_match)
