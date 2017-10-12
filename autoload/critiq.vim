@@ -74,6 +74,7 @@ fu! s:pr_tab_commands()
 	command! -buffer CritiqBrowseIssue call critiq#jira#browse_issue(t:critiq_pull_request)
 	command! -buffer CritiqMerge call critiq#github#merge_pr(t:critiq_pull_request)
 	command! -buffer CritiqCheckout call critiq#checkout()
+	command! -buffer CritiqPull call critiq#pull()
 endfu
 
 fu! s:pr_tab_mappings()
@@ -81,6 +82,7 @@ fu! s:pr_tab_mappings()
 	nnoremap <buffer> gi :CritiqBrowseIssue<cr>
 	nnoremap <buffer> m :CritiqMerge<cr>
 	nnoremap <buffer> <leader>c :CritiqCheckout<cr>
+	nnoremap <buffer> <leader>p :CritiqPull<cr>
 endfu
 
 fu! critiq#comment()
@@ -109,6 +111,12 @@ fu! critiq#comment()
 
 		startinsert
 	endif
+endfu
+
+fu! critiq#pull()
+	let pr = t:critiq_pull_request
+	let branch = critiq#github#pull(pr)
+	echo 'Pulled down PR changes into branch: ' . branch
 endfu
 
 fu! critiq#checkout()

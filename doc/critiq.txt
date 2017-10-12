@@ -94,10 +94,19 @@ reviewing session.
                                                               *:CritiqCheckout*
 :CritiqCheckout
 
-Views: Pull request.
+  Views: Pull request.
 
   Will locally check you out to the branch of the pull request if the current
   working directory is the correct git repository.
+
+                                                                  *:CritiqPull*
+:CritiqPull
+  
+  Views: Pull request.
+
+  Fetches origin changes, checkouts to the branch and merges. This is usefull
+  if you're reviewing pull requests where the branch you're trying to merge is
+  the same as the branch you're trying to merge into.
 
                                                               *:CritiqOpenFile*
 :CritiqOpenFile
