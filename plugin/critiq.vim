@@ -9,5 +9,5 @@ if exists("g:critiq_loaded")
 endif
 let g:critiq_loaded = 1
 
-command! -nargs=* Critiq call critiq#list_pull_requests(<f-args>)
+command! -nargs=* Critiq call critiq#views#pr_list#render(<f-args>)
 
