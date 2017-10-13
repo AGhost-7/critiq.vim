@@ -218,12 +218,29 @@ fu! critiq#github#pr_comments(issue, callback)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
 
+fu! s:ensure_not_wip()
+	let status = system('git status -s')
+	if len(status) != 0
+		throw 'Current branch as uncommited changes'
+	endif
+endfu
+
 fu! critiq#github#checkout(pr)
+	call s:ensure_not_wip()
 	let sha = a:pr.head.sha
-	let branch = a:pr.head.ref
+	let branch = 'critiq/pr/' . a:pr.number
 	let remote_branch = 'pull/' . a:pr.number . '/head:' . branch
-	call system('git fetch origin ' . shellescape(remote_branch))
+	call system('git fetch --update-head-ok origin ' . shellescape(remote_branch))
 	call system('git checkout ' . shellescape(branch))
+	return branch
+endfu
+
+fu! critiq#github#pull(pr)
+	call s:ensure_not_wip()
+	let branch = a:pr.head.ref
+	call system('git fetch origin')
+	call system('git checkout ' . shellescape(branch))
+	call system('git merge '. shellescape('origin/' . branch))
 	return branch
 endfu
 
