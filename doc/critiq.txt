@@ -130,7 +130,7 @@ reviewing session.
 
   Load a list of the labels which are on the repository with the ones on the
   pull request marked.
- 
+
                                                            *:CritiqToggleLabel*
 :CritiqToggleLabel
   
@@ -138,6 +138,12 @@ reviewing session.
 
   Add/remove the label on the given pull request.
 
+                                                          *:CritiqListComments*
+:CritiqListComments
+
+  Views: Pull request
+
+  View all comments on the cursor's position in a new buffer.
 
 ===============================================================================
 4. Autocommands                                                *critiq-autocmd*

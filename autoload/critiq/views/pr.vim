@@ -9,6 +9,8 @@ fu! s:on_open_pr(response)
 	command! -buffer CritiqComment call critiq#views#review#render('COMMENT')
 	command! -buffer CritiqCommentLine call critiq#views#comment#render()
 	command! -buffer CritiqOpenFile call critiq#views#pr_file#render()
+	command! -buffer CritiqListComments call critiq#views#comment_list#render()
+
 	call critiq#pr_tab_commands()
 
 	if !exists('g:critiq_no_mappings')
@@ -17,6 +19,7 @@ fu! s:on_open_pr(response)
 		nnoremap <buffer> rr :CritiqRequestChanges<cr>
 		nnoremap <buffer> rc :CritiqComment<cr>
 		nnoremap <buffer> c :CritiqCommentLine<cr>
+		nnoremap <buffer> C :CritiqListComments<cr>
 		nnoremap <buffer> gf :CritiqOpenFile<cr>
 		call critiq#pr_tab_mappings()
 	endif
