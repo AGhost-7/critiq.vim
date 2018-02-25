@@ -29,15 +29,6 @@ fu! s:on_open_pr(response)
 	call s:render_pr_comments()
 endfu
 
-fu! s:on_pr_labels(response)
-	let t:critiq_pr_labels = a:response
-	command! -buffer CritiqEditLabels call critiq#views#label_list#render()
-
-	if !exists('g:critiq_no_mappings')
-		nnoremap <buffer> <leader>l :CritiqEditLabels<cr>
-	endif
-endfu
-
 fu! s:on_pr_comments(response)
 	let t:critiq_pr_comments = a:response.body
 	call s:render_pr_comments()
@@ -89,9 +80,22 @@ fu! s:render_pr_comments()
 	endif
 endfu
 
+fu! s:edit_label_mappings()
+	command! -buffer CritiqEditLabels call critiq#views#label_list#render()
+	if !exists('g:critiq_no_mappings')
+		nnoremap <buffer> <leader>l :CritiqEditLabels<cr>
+	endif
+endfu
+
+fu! s:on_repo_labels(response)
+	let t:critiq_repo_labels[t:critiq_repo_url] = a:response
+	call s:edit_label_mappings()
+endfu
+
 fu! s:on_open_pr_diff(response)
 	let text = a:response['body']
 	let pr = t:critiq_pull_requests[line('.') - 1]
+	let repo_labels = t:critiq_repo_labels
 
 	tabnew
 	setl buftype=nofile
@@ -99,11 +103,18 @@ fu! s:on_open_pr_diff(response)
 	call setline(1, text)
 	setl nomodifiable
 	let t:critiq_pr_diff = critiq#diff#parse(text)
+	let t:critiq_repo_labels = repo_labels
 	setf diff
+
+	let t:critiq_repo_url = critiq#github#repo_url(pr)
+	if has_key(t:critiq_repo_labels, t:critiq_repo_url)
+		call s:edit_label_mappings()
+	else
+		call critiq#github#repo_labels(pr, function('s:on_repo_labels'))
+	endif
 
 	call critiq#github#pull_request(pr, function('s:on_open_pr'))
 	call critiq#github#pr_comments(pr, function('s:on_pr_comments'))
-	call critiq#github#pr_labels(pr, function('s:on_pr_labels'))
 endfu
 
 fu! critiq#views#pr#render()

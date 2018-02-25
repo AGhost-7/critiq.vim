@@ -78,6 +78,7 @@ fu! critiq#views#pr_list#render(...)
 	tabnew
 	let t:critiq_pull_request_page = 1
 	let t:critiq_repositories = a:000
+	let t:critiq_repo_labels = {}
 	let args = [function('s:on_pull_requests'), 1] + a:000
 	call call("critiq#github#list_open_prs", args)
 endfu
