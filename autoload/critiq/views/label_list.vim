@@ -1,8 +1,8 @@
 
 fu! s:render_pr_labels()
 	set modifiable
-	let repo_labels = t:critiq_pr_labels.repo
-	let pr_labels = t:critiq_pr_labels.pr
+	let repo_labels = t:critiq_repo_labels[t:critiq_repo_url]
+	let pr_labels = t:critiq_pull_request.labels
 	let lines = []
 
 	for repo_label in repo_labels
@@ -23,14 +23,15 @@ fu! s:render_pr_labels()
 endfu
 
 fu! s:on_toggle_label(pr_labels)
-	let t:critiq_pr_labels.pr = a:pr_labels
+	let t:critiq_pull_request.labels = a:pr_labels
 	call s:render_pr_labels()
 endfu
 
 fu! s:toggle_label()
 	call critiq#github#toggle_label(
 		\ t:critiq_pull_request,
-		\ t:critiq_pr_labels,
+		\ t:critiq_repo_labels[t:critiq_repo_url],
+		\ t:critiq_pull_request.labels,
 		\ line('.') - 1,
 		\ function('s:on_toggle_label'))
 endfu
@@ -51,5 +52,4 @@ fu! critiq#views#label_list#render()
 	endif
 	
 	call critiq#trigger_event('CritiqEditLabel')
-
 endfu

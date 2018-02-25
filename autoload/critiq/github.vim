@@ -10,6 +10,7 @@ if !exists('g:critiq_github_url')
 	let g:critiq_github_url = 'https://api.github.com'
 endif
 
+" {{{ misc
 fu! s:check_gh_error(response)
 	if a:response['code'] >= 300 || a:response['code'] < 200
 		if has_key(a:response['body'], 'errors')
@@ -33,6 +34,15 @@ fu! s:issue_repo_url(issue)
 	return a:issue.repository_url
 endfu
 
+" Returns the repo url for both issues and pull requests.
+fu! critiq#github#repo_url(issue)
+	if has_key(a:issue, 'repository_url')
+		return a:issue.repository_url
+	else
+		return a:issue.head.repo.url
+	endif
+endfu
+
 fu! s:pr_repo_url(pr)
 	return g:critiq_github_url . '/repos/' . a:pr['head']['repo']['full_name']
 endfu
@@ -45,28 +55,9 @@ fu! s:parse_repo(lines)
 		return substitute(matches[2], '.git$', '', '')
 	endif
 endfu
+" }}}
 
-fu! s:on_list_reviews(response)
-	let id = a:response['id']
-	let reviews = s:requests[id]
-	call remove(s:requests, id)
-
-	let pr_number = reviews['pending'][id]
-	call remove(reviews['pending'], id)
-
-	for pr in reviews['response']['body']
-		if pr['number'] == pr_number
-			let pr['reviews'] = a:response['body']
-			break
-		endif
-	endfor
-
-	if(empty(reviews['pending']))
-		call reviews['callback'](reviews['response'])
-	endif
-
-endfu
-
+" {{{ list_open_prs
 fu! s:on_list_open_prs(response) abort
 	let id = a:response['id']
 	let request = s:requests[id]
@@ -103,7 +94,9 @@ fu! critiq#github#list_open_prs(callback, page, ...)
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
+" }}}
 
+" {{{ pull_request
 fu! s:on_pull_request(response)
 	let id = a:response.id
 	let request = s:requests[id]
@@ -123,6 +116,9 @@ fu! critiq#github#pull_request(issue, callback)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
 
+" }}}
+
+" {{{ diff
 fu! s:on_diff(response) abort
 	let id = a:response['id']
 	let request = s:requests[id]
@@ -146,7 +142,9 @@ fu! critiq#github#diff(issue, callback)
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
+" }}}
 
+" {{{ submit_review
 fu! critiq#github#submit_review(pr, event, body)
 	let data = {
 		\ 'body': a:body,
@@ -164,6 +162,9 @@ fu! critiq#github#submit_review(pr, event, body)
 	call critiq#request#send(url, opts)
 endfu
 
+" }}}
+
+" {{{ submit_comment
 fu! critiq#github#submit_comment(pr, line_diff, body)
 	let data = {
 		\ 'body': a:body,
@@ -183,7 +184,9 @@ fu! critiq#github#submit_comment(pr, line_diff, body)
 
 	let id = critiq#request#send(url, opts)
 endfu
+" }}}
 
+" {{{ merge_pr
 fu! critiq#github#merge_pr(pr)
 	let opts = {
 		\ 'method': 'PUT',
@@ -193,12 +196,17 @@ fu! critiq#github#merge_pr(pr)
 	let url = s:pr_repo_url(a:pr) . '/pulls/' . a:pr['number'] . '/merge'
 	call critiq#request#send(url, opts)
 endfu
+" }}}
 
+" {{{ browse_pr
 fu! critiq#github#browse_pr(pr)
 	let url = 'https://github.com/' . a:pr['head']['repo']['full_name'] . '/pull/' . a:pr['number']
 	call netrw#BrowseX(url, 0)
 endfu
 
+" }}}
+
+" {{{ pr_comments
 fu! s:on_pr_comments(response) abort
 	let id = a:response['id']
 	let request = s:requests[id]
@@ -217,7 +225,9 @@ fu! critiq#github#pr_comments(issue, callback)
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
+" }}}
 
+" {{{ git commands
 fu! s:ensure_not_wip()
 	let status = system('git status -s')
 	if len(status) != 0
@@ -225,6 +235,7 @@ fu! s:ensure_not_wip()
 	endif
 endfu
 
+" {{{ checkout
 fu! critiq#github#checkout(pr)
 	call s:ensure_not_wip()
 	let sha = a:pr.head.sha
@@ -234,7 +245,9 @@ fu! critiq#github#checkout(pr)
 	call system('git checkout ' . shellescape(branch))
 	return branch
 endfu
+" }}}
 
+" {{{ pull
 fu! critiq#github#pull(pr)
 	call s:ensure_not_wip()
 	let branch = a:pr.head.ref
@@ -244,22 +257,24 @@ fu! critiq#github#pull(pr)
 	return branch
 endfu
 
-fu! s:on_pr_labels(response)
+" }}}
+
+" }}}
+
+" {{{ repo_labels
+fu! s:on_repo_labels(response)
 	let id = a:response['id']
 	let request = s:requests[id]
 	call remove(s:requests, id)
 	call s:check_gh_error(a:response)
 
-	call request['callback']({
-		\ 'repo': a:response.body,
-		\ 'pr': request.issue.labels,
-		\ })
+	call request['callback'](a:response.body)
 endfu
 
-fu! critiq#github#pr_labels(issue, callback)
+fu! critiq#github#repo_labels(issue, callback)
 	let opts = {
 		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('s:on_pr_labels'),
+		\ 'callback': function('s:on_repo_labels'),
 		\ }
 	let url = s:issue_repo_url(a:issue) . '/labels'
 	let id = critiq#request#send(url, opts)
@@ -267,6 +282,9 @@ fu! critiq#github#pr_labels(issue, callback)
 	let s:requests[id] = { 'callback': a:callback, 'issue': a:issue }
 endfu
 
+" }}}
+
+" {{{ toggle_label
 fu! s:on_toggle_label(response)
 	let id = a:response.id
 	let request = s:requests[id]
@@ -275,11 +293,11 @@ fu! s:on_toggle_label(response)
 	call request.callback(a:response.body)
 endfu
 
-fu! critiq#github#toggle_label(pr, labels, label_index, callback)
-	let toggle_label = a:labels.repo[a:label_index]
+fu! critiq#github#toggle_label(pr, repo_labels, pr_labels, label_index, callback)
+	let toggle_label = a:repo_labels[a:label_index]
 
 	let found = 0
-	for label in a:labels.pr
+	for label in a:pr_labels
 		if toggle_label.id == label.id
 			let found = 1
 			break
@@ -289,7 +307,6 @@ fu! critiq#github#toggle_label(pr, labels, label_index, callback)
 	let url = s:pr_repo_url(a:pr) . '/issues/' . a:pr['number'] . '/labels'
 	let request = {
 		\ 'callback': a:callback,
-		\ 'labels': a:labels,
 		\ }
 
 	let opts = {
@@ -309,4 +326,4 @@ fu! critiq#github#toggle_label(pr, labels, label_index, callback)
 	let s:requests[id] = request
 
 endfu
-
+" }}}
