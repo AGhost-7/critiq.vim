@@ -15,6 +15,5 @@ fu! critiq#views#pr_file#render()
 
 		call critiq#trigger_event("CritiqOpenFile")
 
-		setl nomodifiable
 	endif
 endfu
