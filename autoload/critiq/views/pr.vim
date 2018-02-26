@@ -115,6 +115,7 @@ fu! s:on_open_pr_diff(response)
 
 	call critiq#github#pull_request(pr, function('s:on_open_pr'))
 	call critiq#github#pr_comments(pr, function('s:on_pr_comments'))
+	call critiq#views#pr_header#render(pr)
 endfu
 
 fu! critiq#views#pr#render()

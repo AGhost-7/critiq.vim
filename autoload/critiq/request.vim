@@ -3,6 +3,7 @@
 " requests, meaning you will need to have it installed for this to work.
 
 let s:requests = {}
+let s:next_responses = []
 
 fu! s:chunk_handler(id, data, event)
 	if !has_key(s:requests, a:id)
@@ -40,6 +41,13 @@ fu! s:exit_handler(id, data, event)
 	endif
 	let s:last_response = response
 	call response['options']['callback'](response)
+	if len(s:next_responses) != 0
+		let next_responses = s:next_responses
+		let s:next_responses = []
+		for next_response in next_responses
+			call call(next_response.callback, next_response.args)
+		endfor
+	endif
 endfu
 
 let s:handler_options = {
@@ -113,3 +121,6 @@ fu! critiq#request#await_response()
 	endwhile
 endfu
 
+fu! critiq#request#next_response(callback, ...)
+	call add(s:next_responses, { 'callback': a:callback, 'args': a:000 })
+endfu

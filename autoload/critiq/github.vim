@@ -327,3 +327,25 @@ fu! critiq#github#toggle_label(pr, repo_labels, pr_labels, label_index, callback
 
 endfu
 " }}}
+
+" {{{ pr_reviews
+
+fu! s:on_pr_reviews(response) abort
+	let id = a:response.id
+	let request = s:requests[id]
+	call remove(s:requests, id)
+	call s:check_gh_error(a:response)
+	call request['callback'](a:response.body)
+endfu
+
+fu! critiq#github#pr_reviews(issue, callback)
+	let opts = {
+		\ 'user': s:user . ':' . s:pass,
+		\ 'callback': function('s:on_pr_reviews')
+		\ }
+	let url = s:issue_repo_url(a:issue) . '/pulls/' . a:issue['number'] . '/reviews'
+	let id = critiq#request#send(url, opts)
+	let s:requests[id] = { 'callback': a:callback }
+endfu
+
+" }}}
