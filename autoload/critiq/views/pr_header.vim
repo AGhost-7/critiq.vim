@@ -18,7 +18,11 @@ fu! s:set_text(pr)
 	" If certain things aren't defined it means that the pull request data is not
 	" finished loading.
 	if exists('t:critiq_pr_reviews')
-		let last_reviewed = t:critiq_pr_reviews[len(t:critiq_pr_reviews) - 1].user.login
+		if len(t:critiq_pr_reviews) == 0
+			let last_reviewed = '<none>'
+		else
+			let last_reviewed = t:critiq_pr_reviews[len(t:critiq_pr_reviews) - 1].user.login
+		endif
 	else
 		let last_reviewed = '<loading...>'
 	endif
@@ -39,7 +43,7 @@ fu! s:on_pr_reviews(pr_reviews)
 		set modifiable
 
 		call s:set_text(t:critiq_pull_request)
-		set nomodifiable
+		setl nomodifiable
 		call win_gotoid(current_window)
 	endif
 endfu
