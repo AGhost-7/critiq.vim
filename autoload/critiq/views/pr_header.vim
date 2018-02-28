@@ -13,6 +13,10 @@ fu s:commands()
 	call critiq#pr_tab_commands()
 endfu
 
+fu! s:format_datetime(data)
+	return tr(strcharpart(a:data, 0, len(a:data) - 4), 'T', ' ')
+endfu
+
 fu! s:set_text(pr)
 	call setline(1, 'Title: ' . a:pr.title . ' #' . a:pr.number)
 	" If certain things aren't defined it means that the pull request data is not
@@ -23,14 +27,27 @@ fu! s:set_text(pr)
 		else
 			let last_reviewed = t:critiq_pr_reviews[len(t:critiq_pr_reviews) - 1].user.login
 		endif
+		let head = t:critiq_pull_request.head
+		let base = t:critiq_pull_request.base
+
+		if head.repo.full_name == base.repo.full_name
+			let from = head.ref
+		else
+			let from = head.label
+		endif
+		let into = base.ref
 	else
 		let last_reviewed = '<loading...>'
+		let into = '<loading...>'
+		let from = '<loading...>'
 	endif
+	
+	call setline(2, 'Merging: into [' . into . '] from [' . from . ']')
+	call setline(3, 'Last Reviewer: ' . last_reviewed)
 
-	call setline(2, 'Last Reviewer: ' . last_reviewed)
-	call setline(3, 'Last Updated: ' . a:pr.updated_at)
+	call setline(4, 'Last Updated: ' . s:format_datetime(a:pr.updated_at))
 
-	call setline(4, 'Body: ' . a:pr.body)
+	call setline(5, 'Body: ' . a:pr.body)
 endfu
 
 fu! s:on_pr_reviews(pr_reviews)
