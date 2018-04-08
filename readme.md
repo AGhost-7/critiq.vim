@@ -1,15 +1,5 @@
-## TODO
-- Comments:
-	- Update comment highlights when you submit a comment of your own.
-	- Show outdated comments.
-- Docs:
-	- Document mappings.
-- Metadata buffer in PR tab:
-	- Show status (Rejected, approved, etc).
-	- Merge target.
-	- Labels.
-	- PR opened by.
-- Display repo in PR list if listing PR's in more than one repo.
+# Critiq.vim
+A neovim plugin to review github pull requests.
 
 ## References
 - [GV](https://github.com/junegunn/gv.vim) for displaying data.
