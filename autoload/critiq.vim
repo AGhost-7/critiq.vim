@@ -28,12 +28,14 @@ endfu
 fu! critiq#pull()
 	let pr = t:critiq_pull_request
 	let branch = critiq#github#pull(pr)
+	let t:critiq_pull = 1
 	echo 'Pulled down PR changes into branch: ' . branch
 endfu
 
 fu! critiq#checkout()
 	let pr = t:critiq_pull_request
 	let branch = critiq#github#checkout(pr)
+	let t:critiq_checkout = 1
 	echo 'Checked out to branch: ' . branch
 endfu
 
