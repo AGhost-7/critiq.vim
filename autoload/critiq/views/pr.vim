@@ -10,7 +10,7 @@ fu! s:on_open_pr(response)
 	command! -buffer CritiqCommentLine call critiq#views#comment#render()
 	command! -buffer CritiqOpenFile call critiq#views#pr_file#render()
 	command! -buffer CritiqListComments call critiq#views#comment_list#render()
-	command! -buffer CritiqCommits call critiq#views#commit_list#render()
+	command! -buffer CritiqListCommits call critiq#views#commit_list#render()
 
 	call critiq#pr_tab_commands()
 
@@ -22,7 +22,7 @@ fu! s:on_open_pr(response)
 		nnoremap <buffer> c :CritiqCommentLine<cr>
 		nnoremap <buffer> C :CritiqListComments<cr>
 		nnoremap <buffer> gf :CritiqOpenFile<cr>
-		nnoremap <buffer> <leader>C :CritiqCommits<cr>
+		nnoremap <buffer> <leader>C :CritiqListCommits<cr>
 		call critiq#pr_tab_mappings()
 	endif
 

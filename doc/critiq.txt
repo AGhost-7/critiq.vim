@@ -146,6 +146,14 @@ reviewing session.
 
   View all comments on the cursor's position in a new buffer.
 
+                                                           *:CritiqListCommits*
+:CritiqListCommits
+
+  Views: Pull request
+
+  View all commits contained in the pull request. Requires being checked out
+  or having the branch pulled down.
+
 ===============================================================================
 4. Autocommands                                                *critiq-autocmd*
 
