@@ -73,6 +73,8 @@ fu! critiq#views#pr_header#render(pr)
 	new
 	setl buftype=nofile
 	setl noswapfile
+	resize 15
+	set winfixheight
 	call s:set_text(a:pr)
 	resize 15
 	call s:commands()
