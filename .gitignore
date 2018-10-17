@@ -1,3 +1,4 @@
+doc/tags
 test/__pycache__
 *.log
 env/

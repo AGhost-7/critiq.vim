@@ -18,6 +18,7 @@ fu! s:format_datetime(data)
 endfu
 
 fu! s:set_text(pr)
+	1,$delete
 	call setline(1, 'Title: ' . a:pr.title . ' #' . a:pr.number)
 	" If certain things aren't defined it means that the pull request data is not
 	" finished loading.
@@ -46,8 +47,9 @@ fu! s:set_text(pr)
 	call setline(3, 'Last Reviewer: ' . last_reviewed)
 
 	call setline(4, 'Last Updated: ' . s:format_datetime(a:pr.updated_at))
-
-	call setline(5, 'Body: ' . a:pr.body)
+	let body = split(a:pr.body, "\n")
+	let body[0] = 'Body: ' . body[0]
+	call setline(5, body)
 endfu
 
 fu! s:on_pr_reviews(pr_reviews)
@@ -60,6 +62,7 @@ fu! s:on_pr_reviews(pr_reviews)
 		set modifiable
 
 		call s:set_text(t:critiq_pull_request)
+		resize 15
 		setl nomodifiable
 		call win_gotoid(current_window)
 	endif
@@ -70,8 +73,8 @@ fu! critiq#views#pr_header#render(pr)
 	new
 	setl buftype=nofile
 	setl noswapfile
-	resize 15
 	call s:set_text(a:pr)
+	resize 15
 	call s:commands()
 	call s:mappings()
 	set nomodifiable

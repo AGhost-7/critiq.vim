@@ -55,6 +55,21 @@ fu! s:parse_repo(lines)
 		return substitute(matches[2], '.git$', '', '')
 	endif
 endfu
+
+fu! s:format_object(obj)
+	for key in keys(a:obj)
+		let value = a:obj[key]
+		if type(value) == v:t_string
+			let a:obj[key] = substitute(value, "\r\n", "\n", 'g')
+		endif
+	endfor
+endfu
+
+fu! s:format_list(items)
+	for item in a:items
+		call s:format_object(item)
+	endfor
+endfu
 " }}}
 
 " {{{ list_open_prs
@@ -65,6 +80,7 @@ fu! s:on_list_open_prs(response) abort
 
 	call s:check_gh_error(a:response)
 	let prs = a:response.body.items
+	call s:format_list(prs)
 	let total = a:response.body.total_count
 	call request['callback'](prs, total)
 endfu
@@ -102,6 +118,7 @@ fu! s:on_pull_request(response)
 	let request = s:requests[id]
 	call remove(s:requests, id)
 	call s:check_gh_error(a:response)
+	call s:format_object(a:response['body'])
 	call request['callback'](a:response)
 endfu
 
@@ -115,7 +132,6 @@ fu! critiq#github#pull_request(issue, callback)
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
-
 " }}}
 
 " {{{ diff
@@ -161,7 +177,6 @@ fu! critiq#github#submit_review(pr, event, body)
 	let url = s:pr_repo_url(a:pr) . '/pulls/' . a:pr['number'] . '/reviews'
 	call critiq#request#send(url, opts)
 endfu
-
 " }}}
 
 " {{{ submit_comment
@@ -256,7 +271,6 @@ fu! critiq#github#pull(pr)
 	call system('git merge '. shellescape('origin/' . branch))
 	return branch
 endfu
-
 " }}}
 
 " }}}
@@ -329,7 +343,6 @@ endfu
 " }}}
 
 " {{{ pr_reviews
-
 fu! s:on_pr_reviews(response) abort
 	let id = a:response.id
 	let request = s:requests[id]
@@ -347,5 +360,4 @@ fu! critiq#github#pr_reviews(issue, callback)
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
-
 " }}}
