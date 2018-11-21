@@ -75,7 +75,8 @@ fu! critiq#request#send(url, options)
 		\ ]
 
 	if has_key(a:options, 'headers')
-		for header in a:options['headers']
+		for header_name in keys(a:options['headers'])
+			let header = header_name . ': ' . a:options['headers'][header_name]
 			call add(cmd, '-H')
 			call add(cmd, header)
 		endfor
