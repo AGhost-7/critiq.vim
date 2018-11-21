@@ -4,7 +4,7 @@
 fu! s:call_provider(function_name, args)
 	" TODO: determine provider through tab local variable?
 	let provider_name = 'github'
-	call critiq#providers#github#request(function_name, args)
+	call critiq#providers#github#request(a:function_name, a:args)
 endfu
 
 fu! critiq#pr#list_open_prs(callback, page, ...)
@@ -58,4 +58,8 @@ endfu
 
 fu! critiq#pr#pr_reviews(issue, callback)
 	call s:call_provider('pr_reviews', [a:issue, a:callback])
+endfu
+
+fu! critiq#pr#repo_url(issue)
+	call s:call_provider('repo_url', [a:issue])
 endfu

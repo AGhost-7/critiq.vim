@@ -5,6 +5,7 @@ let s:pass = $GH_PASS
 let s:user = $GH_USER
 
 let s:requests = {}
+let s:handlers = {}
 
 if !exists('g:critiq_github_url')
 	let g:critiq_github_url = 'https://api.github.com'
@@ -35,13 +36,14 @@ fu! s:issue_repo_url(issue)
 endfu
 
 " Returns the repo url for both issues and pull requests.
-fu! critiq#providers#github#repo_url(issue)
+fu! s:repo_url(issue)
 	if has_key(a:issue, 'repository_url')
 		return a:issue.repository_url
 	else
 		return a:issue.head.repo.url
 	endif
 endfu
+let s:handlers['repo_url'] = function('s:repo_url')
 
 fu! s:pr_repo_url(pr)
 	return g:critiq_github_url . '/repos/' . a:pr['head']['repo']['full_name']
@@ -387,7 +389,7 @@ let s:handers['pr_reviews'] = function('s:pr_reviews')
 
 " {{{ request
 fu! critiq#providers#github#request(function_name, args)
-	let handler = s:handers[a:function_name]
-	call call(hander, args)
+	let Handler = s:handlers[a:function_name]
+	call call(Handler, a:args)
 endfu
 " }}}
