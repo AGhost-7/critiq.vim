@@ -384,12 +384,12 @@ fu! s:pr_reviews(issue, callback)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
 
-let s:handers['pr_reviews'] = function('s:pr_reviews')
+let s:handlers['pr_reviews'] = function('s:pr_reviews')
 " }}}
 
 " {{{ request
 fu! critiq#providers#github#request(function_name, args)
 	let Handler = s:handlers[a:function_name]
-	call call(Handler, a:args)
+	return call(Handler, a:args)
 endfu
 " }}}
