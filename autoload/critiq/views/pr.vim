@@ -108,19 +108,19 @@ fu! s:on_open_pr_diff(response)
 	let t:critiq_repo_labels = repo_labels
 	setf diff
 
-	let t:critiq_repo_url = critiq#github#repo_url(pr)
+	let t:critiq_repo_url = critiq#pr#repo_url(pr)
 	if has_key(t:critiq_repo_labels, t:critiq_repo_url)
 		call s:edit_label_mappings()
 	else
-		call critiq#github#repo_labels(pr, function('s:on_repo_labels'))
+		call critiq#pr#repo_labels(pr, function('s:on_repo_labels'))
 	endif
 
-	call critiq#github#pull_request(pr, function('s:on_open_pr'))
-	call critiq#github#pr_comments(pr, function('s:on_pr_comments'))
+	call critiq#pr#pull_request(pr, function('s:on_open_pr'))
+	call critiq#pr#pr_comments(pr, function('s:on_pr_comments'))
 	call critiq#views#pr_header#render(pr)
 endfu
 
 fu! critiq#views#pr#render()
 	let pr = t:critiq_pull_requests[line('.') - 1]
-	call critiq#github#diff(pr, function('s:on_open_pr_diff'))
+	call critiq#pr#diff(pr, function('s:on_open_pr_diff'))
 endfu

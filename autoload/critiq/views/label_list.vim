@@ -28,7 +28,7 @@ fu! s:on_toggle_label(pr_labels)
 endfu
 
 fu! s:toggle_label()
-	call critiq#github#toggle_label(
+	call critiq#pr#toggle_label(
 		\ t:critiq_pull_request,
 		\ t:critiq_repo_labels[t:critiq_repo_url],
 		\ t:critiq_pull_request.labels,

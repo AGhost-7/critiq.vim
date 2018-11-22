@@ -10,9 +10,9 @@ fu! critiq#trigger_event(event)
 endfu
 
 fu! critiq#pr_tab_commands()
-	command! -buffer CritiqBrowsePr call critiq#github#browse_pr(t:critiq_pull_request)
+	command! -buffer CritiqBrowsePr call critiq#pr#browse_pr(t:critiq_pull_request)
 	command! -buffer CritiqBrowseIssue call critiq#jira#browse_issue(t:critiq_pull_request)
-	command! -buffer CritiqMerge call critiq#github#merge_pr(t:critiq_pull_request)
+	command! -buffer CritiqMerge call critiq#pr#merge_pr(t:critiq_pull_request)
 	command! -buffer CritiqCheckout call critiq#checkout()
 	command! -buffer CritiqPull call critiq#pull()
 endfu
@@ -27,14 +27,14 @@ endfu
 
 fu! critiq#pull()
 	let pr = t:critiq_pull_request
-	let branch = critiq#github#pull(pr)
+	let branch = critiq#pr#pull(pr)
 	let t:critiq_pull = 1
 	echo 'Pulled down PR changes into branch: ' . branch
 endfu
 
 fu! critiq#checkout()
 	let pr = t:critiq_pull_request
-	let branch = critiq#github#checkout(pr)
+	let branch = critiq#pr#checkout(pr)
 	let t:critiq_checkout = 1
 	echo 'Checked out to branch: ' . branch
 endfu

@@ -52,4 +52,9 @@ def create_comment():
     return jsonify(request.get_json(force=True))
 
 
+@app.route('/authorizations', methods=['POST'])
+def create_authorization():
+    return jsonify({'token': 'foobar'})
+
+
 app.run(debug=True)

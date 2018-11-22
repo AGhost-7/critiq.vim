@@ -73,12 +73,14 @@ fu! critiq#views#pr_header#render(pr)
 	new
 	setl buftype=nofile
 	setl noswapfile
+	resize 15
+	set winfixheight
 	call s:set_text(a:pr)
 	resize 15
 	call s:commands()
 	call s:mappings()
 	set nomodifiable
 	let t:critiq_header_window = win_getid()
-	call critiq#github#pr_reviews(a:pr, function('s:on_pr_reviews'))
+	call critiq#pr#pr_reviews(a:pr, function('s:on_pr_reviews'))
 	call win_gotoid(diff_window)
 endfu

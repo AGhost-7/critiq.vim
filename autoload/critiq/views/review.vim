@@ -2,7 +2,7 @@
 
 fu! s:submit_review(event)
 	let body = join(getline(1, '$'), "\n")
-	call critiq#github#submit_review(t:critiq_pull_request, a:event, body)
+	call critiq#pr#submit_review(t:critiq_pull_request, a:event, body)
 	bd
 endfu
 

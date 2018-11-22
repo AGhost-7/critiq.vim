@@ -5,12 +5,32 @@ let s:pass = $GH_PASS
 let s:user = $GH_USER
 
 let s:requests = {}
+let s:handlers = {}
 
 if !exists('g:critiq_github_url')
 	let g:critiq_github_url = 'https://api.github.com'
 endif
 
+if !exists('g:critiq_github_oauth')
+	let g:critiq_github_oauth = 0
+endif
+
 " {{{ misc
+
+fu! s:base_options(callback_name)
+	let opts = {'callback': function(a:callback_name)}
+	let headers = {'Accept': 'application/vnd.github.v3+json'}
+
+	if g:critiq_github_oauth
+		let headers['Authorization'] = 'token ' . s:token
+	else
+		let opts.user = s:user . ':' . s:pass
+	endif
+
+	let opts.headers = headers
+	return opts
+endfu
+
 fu! s:check_gh_error(response)
 	if a:response['code'] >= 300 || a:response['code'] < 200
 		if has_key(a:response['body'], 'errors')
@@ -32,15 +52,6 @@ endfu
 
 fu! s:issue_repo_url(issue)
 	return a:issue.repository_url
-endfu
-
-" Returns the repo url for both issues and pull requests.
-fu! critiq#github#repo_url(issue)
-	if has_key(a:issue, 'repository_url')
-		return a:issue.repository_url
-	else
-		return a:issue.head.repo.url
-	endif
 endfu
 
 fu! s:pr_repo_url(pr)
@@ -72,6 +83,18 @@ fu! s:format_list(items)
 endfu
 " }}}
 
+" {{{ repo_url
+" Returns the repo url for both issues and pull requests.
+fu! s:repo_url(issue)
+	if has_key(a:issue, 'repository_url')
+		return a:issue.repository_url
+	else
+		return a:issue.head.repo.url
+	endif
+endfu
+let s:handlers['repo_url'] = function('s:repo_url')
+" }}}
+
 " {{{ list_open_prs
 fu! s:on_list_open_prs(response) abort
 	let id = a:response['id']
@@ -85,12 +108,8 @@ fu! s:on_list_open_prs(response) abort
 	call request['callback'](prs, total)
 endfu
 
-fu! critiq#github#list_open_prs(callback, page, ...)
-
-	let opts = {
-		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('s:on_list_open_prs'),
-		\ }
+fu! s:list_open_prs(callback, page, ...)
+	let opts = s:base_options('s:on_list_open_prs')
 
 	let base_url = g:critiq_github_url . '/search/issues'
 
@@ -110,6 +129,8 @@ fu! critiq#github#list_open_prs(callback, page, ...)
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
+
+let s:handlers['list_open_prs'] = function('s:list_open_prs')
 " }}}
 
 " {{{ pull_request
@@ -123,15 +144,14 @@ fu! s:on_pull_request(response)
 endfu
 
 " Loads the pull request from the issue
-fu! critiq#github#pull_request(issue, callback)
-	let opts = {
-		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('s:on_pull_request'),
-		\ }
+fu! s:pull_request(issue, callback)
+	let opts = s:base_options('s:on_pull_request')
 	let url = s:issue_repo_url(a:issue) . '/pulls/' . a:issue['number']
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
+
+let s:handlers['pull_request'] = function('s:pull_request')
 " }}}
 
 " {{{ diff
@@ -144,43 +164,38 @@ fu! s:on_diff(response) abort
 	call request['callback'](a:response)
 endfu
 
-fu! critiq#github#diff(issue, callback)
-	let headers = [
-		\ 'Accept: application/vnd.github.v3.diff'
-		\ ]
-	let opts = {
-		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('s:on_diff'),
-		\ 'headers': headers,
-		\ 'raw': 1,
-		\ }
+fu! s:diff(issue, callback)
+	let opts = s:base_options('s:on_diff')
+	let opts.headers['Accept'] = 'application/vnd.github.v3.diff'
+	let opts.raw = 1
 	let url = s:issue_repo_url(a:issue) . '/pulls/' . a:issue['number']
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
+
+let s:handlers['diff'] = function('s:diff')
 " }}}
 
 " {{{ submit_review
-fu! critiq#github#submit_review(pr, event, body)
+fu! s:submit_review(pr, event, body)
 	let data = {
 		\ 'body': a:body,
 		\ 'event': a:event,
 		\	'comments': [],
 		\ }
 
-	let opts = {
-		\ 'method': 'POST',
-		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('s:check_gh_error'),
-		\ 'data': data,
-		\ }
+	let opts = s:base_options('s:check_gh_error')
+	let opts['method'] = 'POST'
+	let opts['data'] = data
 	let url = s:pr_repo_url(a:pr) . '/pulls/' . a:pr['number'] . '/reviews'
 	call critiq#request#send(url, opts)
 endfu
+
+let s:handlers['submit_review'] = function('s:submit_review')
 " }}}
 
 " {{{ submit_comment
-fu! critiq#github#submit_comment(pr, line_diff, body)
+fu! s:submit_comment(pr, line_diff, body)
 	let data = {
 		\ 'body': a:body,
 		\ 'commit_id': a:pr['head']['sha'],
@@ -188,37 +203,36 @@ fu! critiq#github#submit_comment(pr, line_diff, body)
 		\ 'path': a:line_diff['file'],
 		\ }
 
-	let opts = {
-		\ 'method': 'POST',
-		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('s:check_gh_error'),
-		\ 'data': data,
-		\ }
+	let opts = s:base_options('s:check_gh_error')
+	let opts.method = 'POST'
+	let opts.data = data
 
 	let url = s:pr_repo_url(a:pr) . '/pulls/' . a:pr['number'] . '/comments'
 
 	let id = critiq#request#send(url, opts)
 endfu
+
+let s:handlers['submit_comment'] = function('s:submit_comment')
 " }}}
 
 " {{{ merge_pr
-fu! critiq#github#merge_pr(pr)
-	let opts = {
-		\ 'method': 'PUT',
-		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('s:check_gh_error'),
-		\ }
+fu! s:merge_pr(pr)
+	let opts = s:base_options('s:check_gh_error')
+	let opts.method = 'PUT'
 	let url = s:pr_repo_url(a:pr) . '/pulls/' . a:pr['number'] . '/merge'
 	call critiq#request#send(url, opts)
 endfu
+
+let s:handlers['merge_pr'] = function('s:merge_pr')
 " }}}
 
 " {{{ browse_pr
-fu! critiq#github#browse_pr(pr)
+fu! s:browse_pr(pr)
 	let url = 'https://github.com/' . a:pr['head']['repo']['full_name'] . '/pull/' . a:pr['number']
 	call netrw#BrowseX(url, 0)
 endfu
 
+let s:handlers['browse_pr'] = function('s:browse_pr')
 " }}}
 
 " {{{ pr_comments
@@ -230,16 +244,15 @@ fu! s:on_pr_comments(response) abort
 	call request['callback'](a:response)
 endfu
 
-fu! critiq#github#pr_comments(issue, callback)
-	let opts = {
-		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('s:on_pr_comments'),
-		\ }
+fu! s:pr_comments(issue, callback)
+	let opts = s:base_options('s:on_pr_comments')
 
 	let url = s:issue_repo_url(a:issue) . '/pulls/' . a:issue['number'] . '/comments'
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
 endfu
+
+let s:handlers['pr_comments'] = function('s:pr_comments')
 " }}}
 
 " {{{ git commands
@@ -251,7 +264,7 @@ fu! s:ensure_not_wip()
 endfu
 
 " {{{ checkout
-fu! critiq#github#checkout(pr)
+fu! s:checkout(pr)
 	call s:ensure_not_wip()
 	let sha = a:pr.head.sha
 	let branch = 'critiq/pr/' . a:pr.number
@@ -260,10 +273,12 @@ fu! critiq#github#checkout(pr)
 	call system('git checkout ' . shellescape(branch))
 	return branch
 endfu
+
+let s:handlers['checkout'] = function('s:checkout')
 " }}}
 
 " {{{ pull
-fu! critiq#github#pull(pr)
+fu! s:pull(pr)
 	call s:ensure_not_wip()
 	let branch = a:pr.head.ref
 	call system('git fetch origin')
@@ -271,6 +286,8 @@ fu! critiq#github#pull(pr)
 	call system('git merge '. shellescape('origin/' . branch))
 	return branch
 endfu
+
+let s:handlers['pull'] = function('s:pull')
 " }}}
 
 " }}}
@@ -285,17 +302,15 @@ fu! s:on_repo_labels(response)
 	call request['callback'](a:response.body)
 endfu
 
-fu! critiq#github#repo_labels(issue, callback)
-	let opts = {
-		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('s:on_repo_labels'),
-		\ }
+fu! s:repo_labels(issue, callback)
+	let opts = s:base_options('s:on_repo_labels')
 	let url = s:issue_repo_url(a:issue) . '/labels'
 	let id = critiq#request#send(url, opts)
 
 	let s:requests[id] = { 'callback': a:callback, 'issue': a:issue }
 endfu
 
+let s:handlers['repo_labels'] = function('s:repo_labels')
 " }}}
 
 " {{{ toggle_label
@@ -307,7 +322,7 @@ fu! s:on_toggle_label(response)
 	call request.callback(a:response.body)
 endfu
 
-fu! critiq#github#toggle_label(pr, repo_labels, pr_labels, label_index, callback)
+fu! s:toggle_label(pr, repo_labels, pr_labels, label_index, callback)
 	let toggle_label = a:repo_labels[a:label_index]
 
 	let found = 0
@@ -323,10 +338,7 @@ fu! critiq#github#toggle_label(pr, repo_labels, pr_labels, label_index, callback
 		\ 'callback': a:callback,
 		\ }
 
-	let opts = {
-		\ 'callback': function('s:on_toggle_label'),
-		\ 'user': s:user . ':' . s:pass
-		\ }
+	let opts = s:base_options('s:on_toggle_label')
 
 	if found
 		let url .= '/' . substitute(toggle_label['name'], ' ', '%20', 'g')
@@ -340,6 +352,7 @@ fu! critiq#github#toggle_label(pr, repo_labels, pr_labels, label_index, callback
 	let s:requests[id] = request
 
 endfu
+let s:handlers['toggle_label'] = function('s:toggle_label')
 " }}}
 
 " {{{ pr_reviews
@@ -351,13 +364,91 @@ fu! s:on_pr_reviews(response) abort
 	call request['callback'](a:response.body)
 endfu
 
-fu! critiq#github#pr_reviews(issue, callback)
-	let opts = {
-		\ 'user': s:user . ':' . s:pass,
-		\ 'callback': function('s:on_pr_reviews')
-		\ }
+fu! s:pr_reviews(issue, callback)
+	let opts = s:base_options('s:on_pr_reviews')
 	let url = s:issue_repo_url(a:issue) . '/pulls/' . a:issue['number'] . '/reviews'
 	let id = critiq#request#send(url, opts)
 	let s:requests[id] = { 'callback': a:callback }
+endfu
+
+let s:handlers['pr_reviews'] = function('s:pr_reviews')
+" }}}
+
+" {{{ request
+
+fu! s:write_token(token)
+	let directories = [$HOME, '/.local', '/share', '/critiq']
+	let path = ''
+
+	for directory in directories
+		let path .= directory
+		try
+			call mkdir(path)
+		catch
+		endtry
+	endfor
+
+	call writefile([a:token], path . '/token', '')
+endfu
+
+let s:throttled_requests = []
+
+fu! s:request_token(headers)
+	let data = {
+		\ 'note': 'critiq+' . hostname() . '+' . localtime(),
+		\ 'scopes': ['repo'],
+		\ }
+	let opts = {
+				\ 'user': s:user . ':' . s:pass,
+				\ 'callback': function('s:on_token'),
+				\ 'method': 'POST',
+				\ 'data': data,
+				\ 'headers': a:headers,
+				\ }
+		let url = g:critiq_github_url . '/authorizations'
+		call critiq#request#send(url, opts)
+endfu
+
+fu! s:on_token(response) abort
+	if a:response.code == 401 &&
+			\ has_key(a:response.body, 'message') &&
+			\ a:response.body['message'] == 'Must specify two-factor authentication OTP code.'
+		let one_time_password = input('One time password required: ')
+
+		call s:request_token({
+			\ 'X-GitHub-OTP': one_time_password
+			\ })
+	else
+		call s:check_gh_error(a:response)
+		let s:token = a:response.body.token
+		call s:write_token(s:token)
+
+		for throttled_request in s:throttled_requests
+			let function_name = throttled_request['function_name']
+			let args = throttled_request['args']
+			let Handler = s:handlers[function_name]
+			call call(Handler, args)
+		endfor
+	endif
+endfu
+
+fu! critiq#providers#github#request(function_name, args)
+	if ! exists('s:token')
+		let token_file = $HOME . '/.local/share/critiq/token'
+		if filereadable(token_file)
+			let s:token = readfile(token_file)[0]
+		endif
+	endif
+
+	if exists('s:token') || ! g:critiq_github_oauth
+		let Handler = s:handlers[a:function_name]
+		return call(Handler, a:args)
+	else
+		if len(s:throttled_requests) == 0
+			call s:request_token({})
+		endif
+
+		call add(s:throttled_requests, {'function_name': a:function_name, 'args': a:args})
+	endif
 endfu
 " }}}

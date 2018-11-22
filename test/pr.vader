@@ -7,25 +7,25 @@ Before:
   endfu
 
 Execute(lists open prs):
-  call critiq#github#list_open_prs(function('s:on_response'), 1)
+  call critiq#pr#list_open_prs(function('s:on_response'), 1)
   call critiq#request#await_response()
   let g:pr_issues = g:last_response[0]
   AssertEqual empty(g:last_response[0]), 0
   AssertEqual g:last_response[1], 1
 
 Execute(fetches a diff):
-  call critiq#github#diff(g:pr_issues[0], function('s:on_response'))
+  call critiq#pr#diff(g:pr_issues[0], function('s:on_response'))
   call critiq#request#await_response()
   AssertEqual 'hello diff', g:last_response[0]['body'][0]
 
 Execute(fetch full pr):
-  call critiq#github#pull_request(g:pr_issues[0], function('s:on_response'))
+  call critiq#pr#pull_request(g:pr_issues[0], function('s:on_response'))
   call critiq#request#await_response()
   let g:pr_1 = g:last_response[0].body
   AssertEqual g:pr_1.number, 1
 
 Execute(submit review):
-  call critiq#github#submit_review(g:pr_1, 'APPROVE', 'LGTM')
+  call critiq#pr#submit_review(g:pr_1, 'APPROVE', 'LGTM')
   call critiq#request#await_response()
   " This doesn't have a callback so need to use request.vim internals to
   " get the response given back by the server.
@@ -33,13 +33,13 @@ Execute(submit review):
   AssertEqual critiq#request#last_response()['body']['event'], 'APPROVE'
 
 Execute(load comments):
-  call critiq#github#pr_comments(g:pr_issues[0], function('s:on_response'))
+  call critiq#pr#pr_comments(g:pr_issues[0], function('s:on_response'))
   call critiq#request#await_response()
   AssertEqual g:last_response[0]['body'][0]['path'], 'foobar.txt'
 
 Execute(submit comment):
   let line_diff = { 'file_index': 1, 'file': 'foobar.txt' }
   let body = 'needs more salt and pepper'
-  call critiq#github#submit_comment(g:pr_1, line_diff, body)
+  call critiq#pr#submit_comment(g:pr_1, line_diff, body)
   call critiq#request#await_response()
   AssertEqual critiq#request#last_response()['body']['body'], body

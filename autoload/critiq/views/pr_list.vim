@@ -3,7 +3,7 @@
 
 fu! s:browse_from_pr_list()
 	let pr = t:critiq_pull_requests[line('.') - 1]
-	call critiq#github#browse_pr(pr)
+	call critiq#pr#browse_pr(pr)
 endfu
 
 fu! s:load_more_prs()
@@ -11,7 +11,7 @@ fu! s:load_more_prs()
 		let t:critiq_pull_request_page += 1
 		let args = [function('s:on_load_more_prs'), t:critiq_pull_request_page] +
 			\ t:critiq_repositories
-		call call("critiq#github#list_open_prs", args)
+		call call("critiq#pr#list_open_prs", args)
 	else
 		echoerr 'No more pull requests to load'
 	endif
@@ -80,5 +80,5 @@ fu! critiq#views#pr_list#render(...)
 	let t:critiq_repositories = a:000
 	let t:critiq_repo_labels = {}
 	let args = [function('s:on_pull_requests'), 1] + a:000
-	call call("critiq#github#list_open_prs", args)
+	call call("critiq#pr#list_open_prs", args)
 endfu

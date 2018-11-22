@@ -4,7 +4,7 @@ fu! s:submit_comment()
 	" properly...
 	let body = join(getline(1, '$'), "\n")
 	let pr = t:critiq_pull_request
-	call critiq#github#submit_comment(pr, b:critiq_line_diff, body)
+	call critiq#pr#submit_comment(pr, b:critiq_line_diff, body)
 	bd
 endfu
 
