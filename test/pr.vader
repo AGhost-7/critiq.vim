@@ -43,3 +43,12 @@ Execute(submit comment):
   call critiq#pr#submit_comment(g:pr_1, line_diff, body)
   call critiq#request#await_response()
   AssertEqual critiq#request#last_response()['body']['body'], body
+
+Execute(merge pr):
+  call critiq#pr#merge_pr(g:pr_1)
+  call critiq#request#await_response()
+
+Execute(repo labels):
+  call critiq#pr#repo_labels(g:pr_issues[0], function('s:on_response'))
+  call critiq#request#await_response()
+  let g:labels_1 = critiq#request#last_response()
