@@ -53,7 +53,7 @@ fu! critiq#pr#repo_labels(issue, callback)
 endfu
 
 fu! critiq#pr#toggle_label(pr, repo_labels, pr_labels, label_index, callback)
-	return s:call_provider('toggle_label', [a:pr, a:repo_labes, a:pr_labels, a:label_index, a:callback])
+	return s:call_provider('toggle_label', [a:pr, a:repo_labels, a:pr_labels, a:label_index, a:callback])
 endfu
 
 fu! critiq#pr#pr_reviews(issue, callback)

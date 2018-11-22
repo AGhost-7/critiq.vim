@@ -11,14 +11,24 @@ if !exists('g:critiq_github_url')
 	let g:critiq_github_url = 'https://api.github.com'
 endif
 
+if !exists('g:critiq_github_oauth')
+	let g:critiq_github_oauth = 0
+endif
+
 " {{{ misc
 
 fu! s:base_options(callback_name)
-	let headers = {'Authorization': 'token ' . s:token}
-	return {
-		\ 'callback': function(a:callback_name),
-		\ 'headers': headers,
-	  \ }
+	let opts = {'callback': function(a:callback_name)}
+	let headers = {'Accept': 'application/vnd.github.v3+json'}
+
+	if g:critiq_github_oauth
+		let headers['Authorization'] = 'token ' . s:token
+	else
+		let opts.user = s:user . ':' . s:pass
+	endif
+
+	let opts.headers = headers
+	return opts
 endfu
 
 fu! s:check_gh_error(response)
@@ -99,7 +109,6 @@ fu! s:on_list_open_prs(response) abort
 endfu
 
 fu! s:list_open_prs(callback, page, ...)
-
 	let opts = s:base_options('s:on_list_open_prs')
 
 	let base_url = g:critiq_github_url . '/search/issues'
@@ -383,38 +392,47 @@ fu! s:write_token(token)
 endfu
 
 let s:throttled_requests = []
-fu! s:on_token(response) abort
-	call s:check_gh_error(a:response)
-	let s:token = a:response.body.token
-	call s:write_token(s:token)
 
-	for throttled_request in s:throttled_requests
-		let function_name = throttled_request['function_name']
-		let args = throttled_request['args']
-		let Handler = s:handlers[function_name]
-		call call(Handler, args)
-	endfor
-endfu
-
-fu! s:create_token(function_name, args)
-	if len(s:throttled_requests) == 0
-		let data = {'note': 'critiq+' . hostname() . '+' . localtime()}
-		let opts = {
-					\ 'user': s:user . ':' . s:pass,
-					\ 'callback': function('s:on_token'),
-					\ 'method': 'POST',
-					\ 'data': data,
-					\ }
-
+fu! s:request_token(headers)
+	let data = {
+		\ 'note': 'critiq+' . hostname() . '+' . localtime(),
+		\ 'scopes': ['repo'],
+		\ }
+	let opts = {
+				\ 'user': s:user . ':' . s:pass,
+				\ 'callback': function('s:on_token'),
+				\ 'method': 'POST',
+				\ 'data': data,
+				\ 'headers': a:headers,
+				\ }
 		let url = g:critiq_github_url . '/authorizations'
 		call critiq#request#send(url, opts)
-	endif
+endfu
 
-	call add(s:throttled_requests, {'function_name': a:function_name, 'args': a:args})
+fu! s:on_token(response) abort
+	if a:response.code == 401 &&
+			\ has_key(a:response.body, 'message') &&
+			\ a:response.body['message'] == 'Must specify two-factor authentication OTP code.'
+		let one_time_password = input('One time password required: ')
+
+		call s:request_token({
+			\ 'X-GitHub-OTP': one_time_password
+			\ })
+	else
+		call s:check_gh_error(a:response)
+		let s:token = a:response.body.token
+		call s:write_token(s:token)
+
+		for throttled_request in s:throttled_requests
+			let function_name = throttled_request['function_name']
+			let args = throttled_request['args']
+			let Handler = s:handlers[function_name]
+			call call(Handler, args)
+		endfor
+	endif
 endfu
 
 fu! critiq#providers#github#request(function_name, args)
-
 	if ! exists('s:token')
 		let token_file = $HOME . '/.local/share/critiq/token'
 		if filereadable(token_file)
@@ -422,11 +440,15 @@ fu! critiq#providers#github#request(function_name, args)
 		endif
 	endif
 
-	if exists('s:token')
+	if exists('s:token') || ! g:critiq_github_oauth
 		let Handler = s:handlers[a:function_name]
 		return call(Handler, a:args)
 	else
-		call s:create_token(a:function_name, a:args)
+		if len(s:throttled_requests) == 0
+			call s:request_token({})
+		endif
+
+		call add(s:throttled_requests, {'function_name': a:function_name, 'args': a:args})
 	endif
 endfu
 " }}}
