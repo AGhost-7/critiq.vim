@@ -15,6 +15,7 @@ fu! critiq#pr_tab_commands()
 	command! -buffer CritiqMerge call critiq#pr#merge_pr(t:critiq_pull_request)
 	command! -buffer CritiqCheckout call critiq#checkout()
 	command! -buffer CritiqPull call critiq#pull()
+	command! -buffer CritiqDeleteBranch call critiq#pr#delete_branch(t:critiq_pull_request)
 endfu
 
 fu! critiq#pr_tab_mappings()
@@ -23,6 +24,7 @@ fu! critiq#pr_tab_mappings()
 	nnoremap <buffer> m :CritiqMerge<cr>
 	nnoremap <buffer> <leader>c :CritiqCheckout<cr>
 	nnoremap <buffer> <leader>p :CritiqPull<cr>
+	nnoremap <buffer> <leader>d :CritiqDeleteBranch<cr>
 endfu
 
 fu! critiq#pull()

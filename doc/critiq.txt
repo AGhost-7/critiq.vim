@@ -154,6 +154,14 @@ reviewing session.
   View all commits contained in the pull request. Requires being checked out
   or having the branch pulled down.
 
+                                                          *:CritiqDeleteBranch*
+:CritiqDeleteBranch
+
+  Views: Pull requst
+
+  Deletes the head branch of the current pull request. Gives an error if the
+  head and base are not the same repository.
+
 ===============================================================================
 4. Autocommands                                                *critiq-autocmd*
 

@@ -374,6 +374,19 @@ endfu
 let s:handlers['pr_reviews'] = function('s:pr_reviews')
 " }}}
 
+" {{{ delete_branch
+fu! s:delete_branch(pr)
+	if a:pr['head']['repo']['full_name'] == a:pr['base']['repo']['full_name']
+		let branch = a:pr['head']['ref']
+		call system('git push --delete origin ' . shellescape(branch))
+		echo 'Deleted branch ' . branch
+	else
+		throw 'Base and head for the pull request do not match'
+	endif
+endfu
+
+let s:handlers['delete_branch'] = function('s:delete_branch')
+" }}}
 " {{{ request
 
 fu! s:write_token(token)

@@ -60,6 +60,10 @@ fu! critiq#pr#pr_reviews(issue, callback)
 	return s:call_provider('pr_reviews', [a:issue, a:callback])
 endfu
 
+fu! critiq#pr#delete_branch(pr)
+	return s:call_provider('delete_branch', [a:pr])
+endfu
+
 fu! critiq#pr#repo_url(issue)
 	return s:call_provider('repo_url', [a:issue])
 endfu
