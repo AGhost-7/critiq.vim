@@ -70,7 +70,7 @@ fu! critiq#request#send(url, options)
 		\ '-q',
 		\ '-L',
 		\ '-w',
-		\ '%{http_code}',
+		\ '\n%{http_code}',
 		\ s:method_parameter(a:options)
 		\ ]
 
