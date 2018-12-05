@@ -6,7 +6,7 @@ let s:file_pattern = 'diff\s\+--git\s\+a/\(.\+\)\s\+b/\(.\+\)'
 let s:offset_pattern = '^@@ -\(\d\+\),\(\d\+\) +\(\d\+\),\(\d\+\) @@'
 
 fu! s:skip_metadata(iterator, diff_map)
-	while a:iterator.index < a:iterator.end
+	while a:iterator.index < a:iterator.end - 1
 		let line = a:iterator.data[a:iterator.index]
 		let a:iterator.index += 1
 		call add(a:diff_map, 0)
@@ -22,7 +22,7 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map) abort
 	let rm_position = 0
 	let file_index = 0
 
-	while a:iterator.index < a:iterator.end
+	while a:iterator.index < a:iterator.end - 1
 		let line = a:iterator.data[a:iterator.index]
 		if match(line, 'diff') == 0
 			break
@@ -93,7 +93,7 @@ fu! critiq#diff#parse(diff_lines) abort
 	let diff_map = []
 	let current_file = ''
 
-	while iterator.index < iterator.end
+	while iterator.index < iterator.end - 1
 		let line = iterator.data[iterator.index]
 		let iterator.index += 1
 		let file_match = matchlist(line, s:file_pattern)
