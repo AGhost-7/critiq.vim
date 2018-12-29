@@ -7,7 +7,7 @@ Before:
   endfu
 
 Execute(lists open prs):
-  call critiq#pr#list_open_prs(function('s:on_response'), 1)
+  call critiq#pr#list_open_prs(['neovim/neovim'], 1, {}, function('s:on_response'))
   call critiq#request#await_response()
   let g:pr_issues = g:last_response[0]
   AssertEqual empty(g:last_response[0]), 0

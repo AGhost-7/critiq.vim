@@ -6,7 +6,7 @@ let s:file_pattern = 'diff\s\+--git\s\+a/\(.\+\)\s\+b/\(.\+\)'
 let s:offset_pattern = '^@@ -\(\d\+\),\(\d\+\) +\(\d\+\),\(\d\+\) @@'
 
 fu! s:skip_metadata(iterator, diff_map)
-	while a:iterator.index < a:iterator.end - 1
+	while a:iterator.index < a:iterator.end
 		let line = a:iterator.data[a:iterator.index]
 		let a:iterator.index += 1
 		call add(a:diff_map, 0)
@@ -22,7 +22,7 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map) abort
 	let rm_position = 0
 	let file_index = 0
 
-	while a:iterator.index < a:iterator.end - 1
+	while a:iterator.index < a:iterator.end
 		let line = a:iterator.data[a:iterator.index]
 		if match(line, 'diff') == 0
 			break
@@ -58,7 +58,7 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map) abort
 			let add_position += 1
 			let rm_position += 1
 			let file_index += 1
-		elseif match(line, '\') == 0
+		elseif match(line, '\') == 0 || line == ''
 			" Apparently unified diffs have comments ^^
 			" These do not count towards the file index.
 			call add(a:diff_map, 0)

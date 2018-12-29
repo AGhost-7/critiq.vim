@@ -49,3 +49,7 @@ Execute(Allows waiting for the next response):
 
   unlet g:critiq_skip
   unlet g:critiq_called
+
+Execute(Encode url):
+  AssertEqual critiq#request#urlencode('hello!'), 'hello%21'
+  AssertEqual critiq#request#urlencode('hello world'), 'hello%20world'

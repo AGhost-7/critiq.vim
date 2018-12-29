@@ -29,7 +29,7 @@ fu! s:exit_handler(id, data, event)
 	let stdout = response['stdout']
 	let response['code'] = +stdout[len(stdout) - 1]
 	let raw = has_key(response['options'], 'raw') && response['options']['raw']
-	if len(stdout) == 1
+	if len(stdout) == 2
 		let response['body'] = raw ? '' : {}
 	else
 		let body = stdout[0: len(stdout) - 2]
