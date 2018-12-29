@@ -125,3 +125,9 @@ endfu
 fu! critiq#request#next_response(callback, ...)
 	call add(s:next_responses, { 'callback': a:callback, 'args': a:000 })
 endfu
+
+
+" Taken from: https://github.com/junegunn/vim-xmark/pull/6/files
+function! critiq#request#urlencode(input)
+	return substitute(a:input, '[^a-zA-Z0-9_./-]', '\=printf("%%%02X", char2nr(submatch(0)))', 'g')
+endfunction

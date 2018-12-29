@@ -108,21 +108,27 @@ fu! s:on_list_open_prs(response) abort
 	call request['callback'](prs, total)
 endfu
 
-fu! s:list_open_prs(callback, page, ...)
+fu! s:list_open_prs(repos, page, options, callback)
 	let opts = s:base_options('s:on_list_open_prs')
 
 	let base_url = g:critiq_github_url . '/search/issues'
 
-	if a:0 == 0
+	if len(a:repos) == 0
 		let repo = s:parse_repo(systemlist('git remote -v'))
-		let search_query = 'q=repo:' . repo . '+is:pr+state:open'
+		let search_query = 'q=repo:' . repo . '+'
 	else
 		let search_query = 'q='
-		for repo in a:000
+		for repo in a:repos
 			let search_query .= 'repo:' . repo . '+'
 		endfor
-		let search_query .= 'is:pr+state:open'
 	endif
+	if has_key(a:options, 'label')
+		for label in a:options.label
+			let search_query .= 'label:' . critiq#request#urlencode(label) . '+'
+		endfor
+	endif
+	let search_query .= 'is:pr+state:open'
+
 
 	let url = base_url . '?per_page=50&page=' . a:page . '&' . search_query
 

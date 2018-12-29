@@ -7,9 +7,13 @@ fu! s:call_provider(function_name, args)
 	return critiq#providers#github#request(a:function_name, a:args)
 endfu
 
-fu! critiq#pr#list_open_prs(callback, page, ...)
-	let args = [a:callback, a:page] + a:000
-	return s:call_provider('list_open_prs', args)
+fu! critiq#pr#list_open_prs(repos, page, options, callback)
+	return s:call_provider('list_open_prs', [
+		\ a:repos,
+		\ a:page,
+		\ a:options,
+		\ a:callback,
+		\ ])
 endfu
 
 fu! critiq#pr#pull_request(issue, callback)

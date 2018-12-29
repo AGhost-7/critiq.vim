@@ -77,8 +77,27 @@ endfu
 fu! critiq#views#pr_list#render(...)
 	tabnew
 	let t:critiq_pull_request_page = 1
-	let t:critiq_repositories = a:000
+	let t:critiq_pr_list_options = {}
+	let t:critiq_repositories = []
+	for command_arg in a:000
+		let matched = matchlist(command_arg, '^-\([a-z_]\+\)=\(.*\)$')
+		if len(matched) > 0
+			let key = matched[1]
+			let value = matched[2]
+			if has_key(t:critiq_pr_list_options, key)
+				call add(t:critiq_pr_list_options[key], value)
+			else
+				let t:critiq_pr_list_options[key] = [value]
+			endif
+		else
+			call add(t:critiq_repositories, command_arg)
+		endif
+	endfor
 	let t:critiq_repo_labels = {}
-	let args = [function('s:on_pull_requests'), 1] + a:000
-	call call("critiq#pr#list_open_prs", args)
+	call critiq#pr#list_open_prs(
+		\ t:critiq_repositories,
+		\ 1,
+		\ t:critiq_pr_list_options,
+		\ function('s:on_pull_requests')
+		\ )
 endfu

@@ -39,6 +39,10 @@ reviewing session.
   no repository is specified, the repository will be extracted from the git
   origin remote url.
 
+  Additionally, you can specify labels to filter on:
+>
+    :Critiq -label=status/0-triage moby/moby
+<
                                                                 *:CritiqOpenPr*
 :CritiqOpenPr
   
