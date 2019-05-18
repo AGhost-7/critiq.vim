@@ -80,6 +80,14 @@ reviewing session.
 
   Leave a comment on the pull request instead of approving/requesting changes.
 
+
+                                                          *:CritiqSubmitReview*
+:CritiqSubmitReview
+
+  Views: Pull request review.
+
+  Will submit the pull request review (approve / request changes / comment).
+
                                                            *:CritiqCommentLine*
 :CritiqCommentLine
 
@@ -87,6 +95,13 @@ reviewing session.
 
   Leave a comment on a specific line. The line where the comment will be shown
   is determined by the location of the cursor.
+
+:CritiqSubmitComment
+
+  Views: Comment.
+
+  Submits the comment in the currently focused comment view and closes the
+  buffer.
 
                                                                  *:CritiqMerge*
 :CritiqMerge
