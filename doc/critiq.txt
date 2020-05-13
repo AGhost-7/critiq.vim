@@ -258,7 +258,7 @@ g:critiq_no_mappings
                                                   *critiq-g:critiq_oauth*
 g:critiq_github_oauth
 
-  Tell critiq to use oAuth insead of basic authentication. This will be
+  Tell critiq to use oAuth instead of basic authentication. This will be
   required if you want to use two factor authentication. The token is
   persisted in the `~/.local/share/critiq/` directory. By default this feature is
   disabled.
