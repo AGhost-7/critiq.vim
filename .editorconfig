@@ -1,2 +1,4 @@
+[Dockerfile]
+indent_style = tab
 [*.vim]
 indent_style = tab

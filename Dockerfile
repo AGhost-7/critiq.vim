@@ -1,12 +1,11 @@
-FROM testbed/vim:latest
-
-RUN install_vim -tag neovim:v0.2.0 -build
+FROM ubuntu:focal
 
 ENV GH_USER user
 ENV GH_PASS pass
 
-RUN apk --no-cache add bash python3 git curl && \
-	pip3 install --upgrade pip
+RUN apt-get update && \
+	apt-get install neovim curl git python3-pip -y && \
+	rm -rf /var/lib/apt/lists/* 
 
 COPY ./entrypoint.sh /entrypoint.sh
 ENV PATH=$PATH:/vim-build/bin
@@ -17,4 +16,4 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 WORKDIR /testplugin
 
-CMD ["neovim-v0.2.0", "-u", "test/fixtures/vimrc", "-c", "Vader! test/*"]
+CMD ["nvim", "-u", "test/fixtures/vimrc", "-c", "Vader! test/*"]

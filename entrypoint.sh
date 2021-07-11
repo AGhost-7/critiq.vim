@@ -2,7 +2,7 @@
 
 set -e
 
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 
 echo Starting up API mock
 ./test/mocks/api.py > api.log 2>&1 &
