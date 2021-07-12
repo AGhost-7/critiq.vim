@@ -82,3 +82,18 @@ Execute(file add diffs):
   let g:diff_map = critiq#diff#parse(lines)
 
   AssertEqual g:diff_map[6].position, 1
+
+Execute(file remove diffs):
+  let lines = [
+    \ 'diff --git a/.gitignore b/.gitignore',
+    \ 'deleted file mode 100644',
+    \ 'index b622d4c843e33f..00000000000000',
+    \ '--- a/.gitignore',
+    \ '+++ /dev/null',
+    \ '@@ -1 +0,0 @@',
+    \ '-temp.*/',
+    \ ]
+
+  let g:diff_map = critiq#diff#parse(lines)
+
+  AssertEqual g:diff_map[6].position, 1

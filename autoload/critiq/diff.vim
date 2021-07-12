@@ -67,6 +67,14 @@ fu! s:parse_diff_contents(iterator, current_file, diff_map) abort
 			let add_position = 1
 			call add(a:diff_map, 0)
 			let file_index += 1
+		elseif match(line, '@@ -1 +0,0 @@') == 0
+			" diff file for .gitignore sometimes contains hunk as
+			" below for single line deleted.
+			" Seems to be special case.
+			let rm_position = 1
+			let add_position = 0
+			call add(a:diff_map, 0)
+			let file_index += 1
 		else
 			let offset_match = matchlist(line, s:offset_pattern)
 			if !empty(offset_match)
